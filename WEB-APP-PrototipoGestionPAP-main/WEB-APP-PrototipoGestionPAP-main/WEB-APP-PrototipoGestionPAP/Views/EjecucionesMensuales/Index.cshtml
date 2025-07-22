@@ -1,0 +1,435 @@
+﻿@model List<WEB_APP_PrototipoGestionPAP.Models.EjecucionesMensuales>
+
+@{
+    ViewBag.Title = "Ejecuciones Mensuales";
+    var ejecucionEditar = ViewBag.EjecucionEditar as WEB_APP_PrototipoGestionPAP.Models.EjecucionesMensuales;
+    var currentFilter = ViewBag.Filter as string;
+    var currentFilterField = ViewBag.FilterField as string;
+}
+
+<style>
+    /* Estilos para los botones y paginación */
+    .btn-primary {
+        background-color: #004383;
+        border-color: #004383;
+    }
+
+    .fab-add {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        font-size: 24px;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        z-index: 9999;
+    }
+
+    .pagination-custom .page-link {
+        background-color: white;
+        border-color: #dee2e6;
+        color: #6c757d;
+    }
+
+        .pagination-custom .page-link:hover {
+            background-color: #f8f9fa;
+            border-color: #cfd4da;
+            color: #343a40;
+        }
+
+    .pagination-custom .page-item.active .page-link {
+        background-color: #004383 !important;
+        border-color: #004383 !important;
+        color: white !important;
+        font-weight: bold;
+        border-width: 2px;
+    }
+
+        .pagination-custom .page-item.active .page-link:hover {
+            background-color: #003366 !important;
+            border-color: #003366 !important;
+            color: white !important;
+        }
+
+    .pagination-custom .page-item.disabled .page-link {
+        border-color: #dee2e6;
+        color: transparent;
+        cursor: not-allowed;
+    }
+</style>
+
+<div class="card position-relative m-2" style="background-color: #fff; color: #000;">
+    <div class="card-header text-center" style="background-color: #f8f9fa;">
+        <h3 class="m-0" style="font-weight: bold;">Ejecuciones Mensuales</h3>
+    </div>
+    <div class="card-body">
+        <form id="searchForm" method="get" action="@Url.Action("Index", "EjecucionesMensuales")">
+            <div class="d-flex mb-3">
+                <div class="me-2 flex-grow-1">
+                    <input type="text" class="form-control" id="searchInput" name="filter" placeholder="Buscar..." value="@currentFilter" />
+                </div>
+                <div>
+                    @Html.DropDownList(
+                             "filterField",
+                             new SelectList(new[]
+                             {
+                    new { Value = "ObraTareaId", Text = "Filtrar por Obra/Tarea" },
+                    new { Value = "Mes", Text = "Filtrar por Mes" }
+                    }, "Value", "Text", currentFilterField),
+                             new { @class = "form-select", id = "filterFieldSelect" }
+                             )
+                </div>
+                <input type="hidden" name="page" value="1" id="currentPage" />
+            </div>
+        </form>
+
+        <table class="table table-bordered table-striped" id="tblEjecucionesMensuales">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Mes</th>
+                    <th>Monto</th>
+                    <th>Porcentaje de Ejecución</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.EjecucionId</td>
+                        <td>@item.Mes</td>
+                        <td>@item.Monto</td>
+                        <td>@item.PorcentajeEjecucion</td>
+                        <td style="padding: 0; height: 100%; vertical-align: middle;">
+                            <div style="display: flex; justify-content: center; align-items: center; height: 100%; width: 100%; gap: 8px;">
+                                <!-- Botón para Editar -->
+                                <a href="#"
+                                   class="btn btn-sm btn-outline-secondary btn-edit"
+                                   title="Editar"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#editarModal"
+                                   data-id="@item.EjecucionId"
+                                   data-obratarea="@item.ObraTareaId"
+                                   data-mes="@item.Mes"
+                                   data-monto="@item.Monto"
+                                   data-porcentaje="@item.PorcentajeEjecucion">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <!-- Botón para Eliminar -->
+                                <form action="@Url.Action("Eliminar", "EjecucionesMensuales", new { id = item.EjecucionId })" method="post" style="margin: 0;">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar" onclick="return confirm('¿Desea eliminar este registro?');">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center pagination-custom">
+            @{
+                int currentPage = ViewBag.CurrentPage != null ? (int)ViewBag.CurrentPage : 1;
+                int totalPages = ViewBag.TotalPages != null ? (int)ViewBag.TotalPages : 1;
+
+                // Botón "Anterior"
+                if (currentPage > 1)
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="@Url.Action("Index", "EjecucionesMensuales", new { page = currentPage - 1, filter = ViewBag.Filter, filterField = ViewBag.FilterField })" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                }
+                else
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </span>
+                    </li>
+                }
+
+                // Botones para cada página
+                for (int i = 1; i <= totalPages; i++)
+                {
+                    var cssClass = i == currentPage ? "page-item active" : "page-item";
+                    var url = Url.Action("Index", "EjecucionesMensuales", new { page = i, filter = ViewBag.Filter, filterField = ViewBag.FilterField });
+                    <li class="@cssClass">
+                        <a class="page-link" href="@url">@i</a>
+                    </li>
+                }
+
+                // Botón "Siguiente"
+                if (currentPage < totalPages)
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="@Url.Action("Index", "EjecucionesMensuales", new { page = currentPage + 1, filter = ViewBag.Filter, filterField = ViewBag.FilterField })" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                }
+                else
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </span>
+                    </li>
+                }
+            }
+        </ul>
+    </nav>
+
+    <!-- Botón flotante para agregar -->
+    <button type="button" class="btn btn-primary fab-add" data-bs-toggle="modal" data-bs-target="#agregarModal" title="Agregar">+</button>
+</div>
+
+<!-- Modal Agregar -->
+<div class="modal fade" id="agregarModal" tabindex="-1" aria-labelledby="agregarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background-color:#fff; color:#000;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="agregarModalLabel">Agregar Nueva Ejecución Mensual</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body position-relative">
+                <!-- (Opcional) Spinner de carga si deseas replicar la lógica de Actividades -->
+                <div id="spinnerObrasAgregar" class="d-flex justify-content-center align-items-center position-absolute top-0 start-0 w-100 h-100 d-none"
+                     style="background-color: rgba(255,255,255,0.7); z-index: 10;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando Obras/Tareas...</span>
+                    </div>
+                </div>
+
+                <div id="formAgregar" style="display: none;">
+                    <form action="@Url.Action("Agregar", "EjecucionesMensuales")" method="post">
+                        <div class="mb-3">
+                            <label for="ddlObraTareaAgregar" class="form-label">Obra/Tarea</label>
+                            <select id="ddlObraTareaAgregar" name="ObraTareaId" class="form-select" required>
+                                <!-- Opciones cargadas dinámicamente -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtMes" class="form-label">Mes</label>
+                            <input type="number" class="form-control" id="txtMes" name="Mes" min="1" max="12" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtMonto" class="form-label">Monto</label>
+                            <input type="number" step="0.01" class="form-control" id="txtMonto" name="Monto" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtPorcentaje" class="form-label">Porcentaje de Ejecución</label>
+                            <input type="number" step="0.01" class="form-control" id="txtPorcentaje" name="PorcentajeEjecucion" required />
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="editarModal" tabindex="-1" aria-labelledby="editarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background-color:#fff; color:#000;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editarModalLabel">Editar Ejecución Mensual</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body position-relative">
+                <!-- (Opcional) Spinner de carga para el modal Editar -->
+                <div id="spinnerObrasEditar" class="d-flex justify-content-center align-items-center position-absolute top-0 start-0 w-100 h-100 d-none"
+                     style="background-color: rgba(255,255,255,0.7); z-index: 10;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando Obras/Tareas...</span>
+                    </div>
+                </div>
+
+                <div id="formEditar" style="display: none;">
+                    <form action="@Url.Action("Editar", "EjecucionesMensuales")" method="post">
+                        <input type="hidden" name="EjecucionId" value="@ejecucionEditar?.EjecucionId" />
+
+                        <div class="mb-3">
+                            <label for="ddlObraTareaEditar" class="form-label">Obra/Tarea</label>
+                            <select id="ddlObraTareaEditar" name="ObraTareaId" class="form-select" required>
+                                <!-- Opciones cargadas dinámicamente -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtMesEdit" class="form-label">Mes</label>
+                            <input type="number" class="form-control" id="txtMesEdit" name="Mes" min="1" max="12" value="@ejecucionEditar?.Mes" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtMontoEdit" class="form-label">Monto</label>
+                            <input type="number" step="0.01" class="form-control" id="txtMontoEdit" name="Monto" value="@ejecucionEditar?.Monto" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtPorcentajeEdit" class="form-label">Porcentaje de Ejecución</label>
+                            <input type="number" step="0.01" class="form-control" id="txtPorcentajeEdit" name="PorcentajeEjecucion" value="@ejecucionEditar?.PorcentajeEjecucion" required />
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // -----------------------------
+    //  Función para cargar ObrasTareas
+    // -----------------------------
+    function loadObrasTareas(url, selectId, defaultOptionText) {
+        return fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Error HTTP " + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Llenar el select
+                const selectElement = document.getElementById(selectId);
+                if (selectElement) {
+                    selectElement.innerHTML = "";
+                    // Opción por defecto
+                    const defaultOption = document.createElement("option");
+                    defaultOption.value = "";
+                    defaultOption.text = defaultOptionText;
+                    selectElement.add(defaultOption);
+
+                    if (data && data.data) {
+                        data.data.forEach(item => {
+                            const option = document.createElement("option");
+                            option.value = item.obraTareaId;      // Valor
+                            option.text = item.obraTarea;         // Texto a mostrar
+                            selectElement.add(option);
+                        });
+                    }
+                }
+            })
+            .catch(error => {
+                console.error("Error al cargar ObrasTareas:", error);
+                // Retornar una promesa resuelta para no romper el Promise.all si lo usas
+                return Promise.resolve();
+            });
+    }
+
+    // -----------------------------
+    //  Manejo del Modal Agregar
+    // -----------------------------
+    const agregarModal = document.getElementById('agregarModal');
+    agregarModal.addEventListener('show.bs.modal', function () {
+        // (Opcional) Mostramos spinner
+        const spinner = document.getElementById('spinnerObrasAgregar');
+        const formAgregar = document.getElementById('formAgregar');
+        spinner.classList.remove('d-none');
+        spinner.style.display = 'flex';
+        formAgregar.style.display = 'none';
+
+        // Cargamos las obras/tareas:
+        loadObrasTareas(
+            'https://api-prototipogestionpap20250108212655.azurewebsites.net/api/ObrasTareas',
+            'ddlObraTareaAgregar',
+            'Seleccione Obra/Tarea'
+        )
+        .finally(() => {
+            // Ocultamos spinner y mostramos el formulario
+            spinner.classList.add('d-none');
+            formAgregar.style.display = 'block';
+        });
+    });
+
+    // -----------------------------
+    //  Manejo del Modal Editar
+    // -----------------------------
+    const editarModal = document.getElementById('editarModal');
+    editarModal.addEventListener('show.bs.modal', function (event) {
+        const spinner = document.getElementById('spinnerObrasEditar');
+        const formEditar = document.getElementById('formEditar');
+        spinner.classList.remove('d-none');
+        spinner.style.display = 'flex';
+        formEditar.style.display = 'none';
+
+        // Botón que dispara el modal
+        const button = event.relatedTarget;
+
+        // Cargamos catálogos y luego asignamos valores
+        loadObrasTareas(
+            'https://api-prototipogestionpap20250108212655.azurewebsites.net/api/ObrasTareas',
+            'ddlObraTareaEditar',
+            'Seleccione Obra/Tarea'
+        )
+        .then(() => {
+            // Asignar los datos al formulario
+            document.querySelector('input[name="EjecucionId"]').value = button.getAttribute('data-id');
+            document.getElementById('txtMesEdit').value = button.getAttribute('data-mes');
+            document.getElementById('txtMontoEdit').value = button.getAttribute('data-monto');
+            document.getElementById('txtPorcentajeEdit').value = button.getAttribute('data-porcentaje');
+
+            // Una vez cargadas las opciones, seleccionamos la que corresponda
+            const ddlObraTareaEditar = document.getElementById('ddlObraTareaEditar');
+            if (ddlObraTareaEditar) {
+                ddlObraTareaEditar.value = button.getAttribute('data-obratarea') || "";
+            }
+        })
+        .finally(() => {
+            spinner.classList.add('d-none');
+            formEditar.style.display = 'block';
+        });
+    });
+
+    // -----------------------------
+    //  Búsqueda con debounce
+    // -----------------------------
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchInput');
+        const filterFieldSelect = document.getElementById('filterFieldSelect');
+        const searchForm = document.getElementById('searchForm');
+        const currentPageInput = document.getElementById('currentPage');
+
+        let debounceTimer;
+
+        function handleSearch() {
+            const query = searchInput.value.trim();
+            // Solo buscar si la longitud es 0 (borrar) o mayor a 4
+            if (query.length > 4 || query.length === 0) {
+                currentPageInput.value = 1;
+                searchForm.submit();
+            }
+        }
+
+        searchInput.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(handleSearch, 500);
+        });
+
+        filterFieldSelect.addEventListener('change', function () {
+            currentPageInput.value = 1;
+            searchForm.submit();
+        });
+
+        searchForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            handleSearch();
+        });
+    });
+</script>

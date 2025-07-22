@@ -1,0 +1,79 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card custom-card">
+                <div class="card-body">
+                    <div class="image-container">
+                        <img src="https://sp-ao.shortpixel.ai/client/to_webp,q_glossy,ret_img,w_1024,h_683/https://www.ug.edu.ec/wp-content/uploads/2024/06/ImagenDestacada-1024x683.jpg"
+                             class="card-img-top" alt="Portada de la Universidad">
+                    </div>
+
+                    <h5 class="card-title">Detalles del Proyecto</h5>
+                    <h6>Universidad:</h6>
+                    <p>Universidad de Guayaquil</p>
+                    <h6>Facultad:</h6>
+                    <p>Facultad de Ciencias Matemáticas y Físicas</p>
+                    <h6>Nombre del Proyecto:</h6>
+                    <p>Prototipo Gestion PAP</p>
+                    <h6>Versión:</h6>
+                    <p>1.0.0</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card custom-card">
+                <div class="card-body">
+                    <h5 class="card-title">Equipo</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <strong>Cueva Aguilar Jean Carlos</strong>
+                            <ul>
+                                <li>Developer</li>
+                            </ul>
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Panches Iñiguez Michael Adonis</strong>
+                            <ul>
+                                <li>Developer</li>
+                            </ul>
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Encuesta de Satisfacción</strong>
+                            <ul>
+                                <li>https://forms.gle/ZLrKk2rMVNN65REe6</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .image-container {
+        width: 100%;
+        height: 150px;
+        overflow: hidden;
+        position: relative;
+    }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+
+    .custom-card {
+        height: 80vh; 
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+</style>

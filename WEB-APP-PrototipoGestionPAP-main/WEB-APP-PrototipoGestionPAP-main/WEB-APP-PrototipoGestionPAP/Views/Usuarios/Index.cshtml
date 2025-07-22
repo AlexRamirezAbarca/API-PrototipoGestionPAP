@@ -1,0 +1,383 @@
+@model WEB_APP_PrototipoGestionPAP.Models.ViewModels.CatalogViewModel<WEB_APP_PrototipoGestionPAP.Models.Usuarios>
+@inject IConfiguration Configuration
+
+@{
+    ViewBag.Title = Model.Title;
+}
+<style>
+    /* Estilos para el paginador del dropdown */
+    .choices__pagination {
+        display: flex;
+        justify-content: center;
+        padding: 8px;
+        border-top: 1px solid #ddd;
+        background: #f8f9fa;
+    }
+
+        .choices__pagination button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+            .choices__pagination button:hover {
+                background: #e9ecef;
+            }
+
+            .choices__pagination button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+</style>
+<div class="card m-2">
+    <div class="card-header text-center bg-light">
+        <h3 class="m-0 fw-bold">@Model.Title</h3>
+    </div>
+    <div class="card-body">
+        <form id="searchForm" method="get" action="@Url.Action("Index", Model.ControllerName)" class="mb-3">
+            <div class="d-flex">
+                <input type="text" class="form-control me-2" id="searchInput" name="filter" placeholder="Buscar..." value="@Model.CurrentFilter" />
+                @Html.DropDownList("filterField", new SelectList(new[] {
+                new { Value = "NombreUsuario", Text = "Filtrar por Usuario" },
+                }, "Value", "Text", Model.CurrentFilterField), new { @class = "form-select", id = "filterFieldSelect" })
+                <input type="hidden" name="page" value="1" id="currentPage" />
+            </div>
+        </form>
+
+        <table class="table table-bordered table-striped" id="tblUsuarios">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre de Usuario</th>
+                    <th>Rol</th>
+                    <th>Persona</th>
+                    @if (Model.CanUpdate || Model.CanDelete)
+                    {
+                        <th class="text-center">Acciones</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Items.Any())
+                {
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.UsuarioId</td>
+                            <td>@item.NombreUsuario</td>
+                            <td>@(item.Rol?.Nombre ?? "-")</td>
+                            <td>@(item.Persona != null ? $"{item.Persona.Nombre} {item.Persona.Apellido}" : "-")</td>
+                            @if (Model.CanUpdate || Model.CanDelete)
+                            {
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        @if (Model.CanUpdate)
+                                        {
+                                            <a href="#"
+                                               class="btn btn-sm btn-outline-secondary btn-edit"
+                                               data-bs-toggle="modal"
+                                               data-bs-target="#editarModal"
+                                               data-id="@item.UsuarioId"
+                                               data-nombreusuario="@item.NombreUsuario"
+                                               data-rolid="@item.RolId"
+                                               data-personaid="@(item.PersonaId?.ToString() ?? "")">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        }
+                                        @if (Model.CanDelete)
+                                        {
+                                            <form action="@Url.Action("Eliminar", Model.ControllerName, new { id = item.UsuarioId })" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Está seguro de que desea eliminar este usuario?');">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            }
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="@( (Model.CanUpdate || Model.CanDelete) ? 5 : 4 )" class="text-center">
+                            No se encontraron registros
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @Html.Partial("_Pagination", new WEB_APP_PrototipoGestionPAP.Models.ViewModels.PaginationViewModel
+   {
+       CurrentPage = Model.CurrentPage,
+       TotalPages = Model.TotalPages,
+       Filter = Model.CurrentFilter,
+       FilterField = Model.CurrentFilterField
+   })
+
+        @if (Model.CanWrite)
+        {
+            <button type="button" class="btn btn-primary fab-add" data-bs-toggle="modal" data-bs-target="#agregarModal">+</button>
+        }
+    </div>
+</div>
+
+<div class="modal fade" id="agregarModal" tabindex="-1" aria-labelledby="agregarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background-color:#fff; color:#000;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="agregarModalLabel">Agregar Nuevo Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="spinnerRolesAgregar"
+                     class="d-flex justify-content-center align-items-center position-absolute top-0 start-0 w-100 h-100 d-none"
+                     style="background-color: rgba(255,255,255,0.7); z-index: 10;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading Roles...</span>
+                    </div>
+                </div>
+                <div id="formAgregar">
+                    <form id="formAgregarUsuario" action="@Url.Action("Agregar", Model.ControllerName)" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label for="txtNombreUsuario" class="form-label">Nombre de Usuario</label>
+                            <input type="text" class="form-control" id="txtNombreUsuario" name="NombreUsuario" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtContraseña" class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" id="txtContraseña" name="Contraseña" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="ddlRolAgregar" class="form-label">Rol</label>
+                            <select id="ddlRolAgregar" name="RolId" class="form-select" required></select>
+
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" value="true" id="checkCrearPersona" name="crearPersona"> <!-- Agregar value="true" -->
+                            <label class="form-check-label" for="checkCrearPersona">
+                                Crear Persona Asociada
+                            </label>
+                        </div>
+                        <div id="personFields" style="display: none;">
+                            <div class="mb-3">
+                                <label for="txtNombrePersona" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="txtNombrePersona" name="Persona.Nombre" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="txtApellido" class="form-label">Apellido</label>
+                                <input type="text" class="form-control" id="txtApellido" name="Persona.Apellido" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="txtCedulaPersona" class="form-label">Cédula</label>
+                                <input type="text" class="form-control" id="txtCedulaPersona" name="Persona.Cedula" min="10" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="txtCorreoElectronico" class="form-label">Correo Electrónico</label>
+                                <input type="email" class="form-control" id="txtCorreoElectronico" name="Persona.CorreoElectronico" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="txtTelefono" class="form-label">Teléfono</label>
+                                <input type="text" class="form-control" id="txtTelefono" name="Persona.Telefono" />
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="submit" class="btn btn-primary" id="btnGuardarAgregar">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editarModal" tabindex="-1" aria-labelledby="editarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background-color:#fff; color:#000;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editarModalLabel">Editar Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body position-relative">
+                <div id="spinnerRolesEditar" class="d-flex justify-content-center align-items-center position-absolute top-0 start-0 w-100 h-100 d-none"
+                     style="background-color: rgba(255,255,255,0.7); z-index: 10;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading Roles...</span>
+                    </div>
+                </div>
+                <div id="formEditar">
+                    <form id="formEditarUsuario" action="@Url.Action("Editar", Model.ControllerName)" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="Id" id="hiddenUsuarioId" />
+                        <div class="mb-3">
+                            <label for="txtNombreUsuarioEdit" class="form-label">Nombre de Usuario</label>
+                            <input type="text" class="form-control" id="txtNombreUsuarioEdit" name="NombreUsuario" required readonly />
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtContraseñaEdit" class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" id="txtContraseñaEdit" name="Contraseña" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="ddlRolEditar" class="form-label">Rol</label>
+                            <select id="ddlRolEditar" name="RolId" class="form-select" required></select>
+
+                        </div>
+                        <input type="number" class="form-control" id="txtPersonaIdEdit" name="PersonaId" hidden />
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary" id="btnGuardarEditar">Guardar cambios</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        var baseUrl = '@Configuration["ApiSettings:BaseUrl"]';
+        let rolesAgregarChoices, rolesEditarChoices;
+                async function loadRoles(selectElement, page, searchQuery, isEdit = false) {
+              // Build URL with pagination and search parameters
+              const pageSize = 5;
+              const url = new URL(baseUrl + '/api/Roles');
+              url.searchParams.append('page', page);
+              url.searchParams.append('pageSize', pageSize);
+              if (searchQuery) {
+                url.searchParams.append('filter', searchQuery);
+                url.searchParams.append('filterField', 'Nombre');
+              }
+              try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("Error en la carga");
+                const data = await response.json();
+                const roles = data.datos.data;
+                // Use the correct property for total pages
+                const totalPages = data.datos.pagination.totalPages;
+
+                // Update current page and total pages in the select instance
+                selectElement.currentPage = page;
+                selectElement.totalPages = totalPages;
+                if (page === 1 || searchQuery !== selectElement.lastSearch) {
+                  selectElement.lastSearch = searchQuery;
+                }
+
+                // Clear current choices and set new ones
+                selectElement.clearChoices();
+                selectElement.setChoices(roles.map(role => ({
+                  value: role.rolId.toString(),
+                  label: role.nombre
+                })), 'value', 'label', true);
+
+
+                // Get the dropdown element
+                const dropdown = selectElement.dropdown.element;
+                // Check if a pagination container already exists
+                let pagination = dropdown.querySelector('.choices__pagination');
+                if (!pagination) {
+                  pagination = document.createElement('div');
+                  pagination.className = 'choices__pagination';
+                  dropdown.appendChild(pagination);
+                }
+                // Update pagination inner HTML to avoid accumulation
+                pagination.innerHTML = `
+                  <button class="choices__pagination-prev" type="button">←</button>
+                  <button class="choices__pagination-next" type="button">→</button>
+                `;
+
+                // Attach event listeners to the pagination buttons
+                pagination.querySelector('.choices__pagination-prev').addEventListener('click', async (e) => {
+                  e.stopPropagation();
+                  if (selectElement.currentPage > 1) {
+                    await loadRoles(selectElement, selectElement.currentPage - 1, selectElement.lastSearch || '', isEdit);
+                  }
+                });
+                pagination.querySelector('.choices__pagination-next').addEventListener('click', async (e) => {
+                  e.stopPropagation();
+                  if (selectElement.currentPage < selectElement.totalPages) {
+                    await loadRoles(selectElement, selectElement.currentPage + 1, selectElement.lastSearch || '', isEdit);
+                  }
+                });
+
+                // Update the disabled state of the pagination buttons
+                const prevButton = pagination.querySelector('.choices__pagination-prev');
+                const nextButton = pagination.querySelector('.choices__pagination-next');
+                if (prevButton) prevButton.disabled = page === 1;
+                if (nextButton) nextButton.disabled = page >= totalPages;
+
+              } catch (error) {
+                console.error("Error loading roles:", error);
+              }
+            }
+
+
+            function initializeRolesSelect(selectId, isEdit = false) {
+            const select = new Choices(`#${selectId}`, {
+                searchPlaceholderValue: 'Buscar rol...',
+                shouldSort: false,
+                loadingText: 'Cargando...',
+                noResultsText: 'No se encontraron resultados',
+                itemSelectText: 'Seleccionar',
+                searchResultLimit: -1,
+                position: 'auto'
+              });
+
+              // Handle the search event to load roles based on the search query
+              select.passedElement.element.addEventListener('search', async (e) => {
+                const search = e.detail.value;
+                await loadRoles(select, 1, search, isEdit);
+              });
+              return select;
+            }
+
+
+        // Modificar los event listeners de los modales
+        agregarModal.addEventListener('show.bs.modal', function () {
+            rolesAgregarChoices = initializeRolesSelect('ddlRolAgregar');
+            loadRoles(rolesAgregarChoices, 1, '');
+        });
+
+        editarModal.addEventListener('show.bs.modal', function (event) {
+            rolesEditarChoices = initializeRolesSelect('ddlRolEditar', true);
+                    const spinner = document.getElementById('spinnerRolesEditar');
+                    const formEditar = document.getElementById('formEditar');
+                    spinner.classList.remove('d-none');
+                    spinner.style.display = 'flex';
+                    formEditar.style.display = 'none';
+                    const button = event.relatedTarget;
+            loadRoles(rolesEditarChoices, 1, '').then(() => {
+                rolesEditarChoices.setChoiceByValue(button.getAttribute('data-rolid'));
+                                document.getElementById('hiddenUsuarioId').value = button.getAttribute('data-id');
+                                document.getElementById('txtNombreUsuarioEdit').value = button.getAttribute('data-nombreusuario');
+                                document.getElementById('txtPersonaIdEdit').value = button.getAttribute('data-personaid');
+            }).finally(() => {
+                            spinner.classList.add('d-none');
+                            formEditar.style.display = 'block';
+            });
+        });
+
+        // Limpiar al cerrar modales
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('hidden.bs.modal', function () {
+                if (rolesAgregarChoices) rolesAgregarChoices.destroy();
+                if (rolesEditarChoices) rolesEditarChoices.destroy();
+            });
+        });
+
+                // Mostrar/ocultar campos de persona al marcar el checkbox
+        document.getElementById('checkCrearPersona').addEventListener('change', function() {
+            const personFields = document.getElementById('personFields');
+            personFields.style.display = this.checked ? 'block' : 'none';
+
+            // Opcional: Hacer campos requeridos cuando está activado
+            const personaInputs = personFields.querySelectorAll('input');
+            personaInputs.forEach(input => input.required = this.checked);
+        });
+    </script>
+}
+

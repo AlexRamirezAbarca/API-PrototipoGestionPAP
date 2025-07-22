@@ -1,0 +1,631 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - WEB_APP_PrototipoGestionPAP</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css"
+          rel="stylesheet">
+    <link rel="stylesheet" href="~/css/styles.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+    <!-- Incluye Bootstrap JS (Asegúrate de incluir solo una vez) -->
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+
+    <style>
+        /* Estilos CSS existentes */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Arial', sans-serif;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+
+        .wrapper {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #004383;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: width 0.3s ease;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            z-index: 2;
+        }
+
+            .sidebar.hidden {
+                width: 70px;
+            }
+
+                .sidebar.hidden .menu-text,
+                .sidebar.hidden .prototype-text,
+                .sidebar.hidden .user-details .user-info {
+                    display: none;
+                }
+
+        .toggle-btn {
+            position: absolute;
+            top: 65px;
+            right: -17.5px;
+            background-color: #fff;
+            color: #004383;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 3;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+            .toggle-btn:hover {
+                background-color: #2a4e6b;
+                color: #fff;
+            }
+
+        .top-section {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+            .top-section .logo img {
+                width: 80px;
+                height: auto;
+                filter: brightness(0) invert(1);
+                transition: width 0.3s ease;
+            }
+
+        .sidebar.hidden .top-section .logo img {
+            width: 45px;
+        }
+
+        .prototype-text {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .menu-items {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .sidebar.hidden .menu-items {
+            align-items: center;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 15px;
+            padding: 7px 20px;
+            transition: background-color 0.2s ease, padding 0.3s ease;
+        }
+
+        .sidebar.hidden a {
+            justify-content: center;
+            padding: 10px 0;
+            width: 100%;
+        }
+
+        .sidebar a:hover {
+            background-color: #2a4e6b;
+        }
+
+        .sidebar i {
+            font-size: 18px;
+            width: 25px;
+            text-align: center;
+        }
+
+        .submenu-toggle {
+            cursor: pointer;
+        }
+
+        .submenu-link {
+            padding-left: 40px;
+            font-size: 14px;
+        }
+
+        .user-details {
+            background-color: #003366;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: space-between;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #fff;
+            color: #004383;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .settings-icon {
+            margin-left: 5px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .logout-icon {
+            margin-left: 5px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+            .logout-icon:hover {
+                color: #ffcccc;
+            }
+
+        .modal-backdrop {
+            z-index: 9998 !important;
+        }
+
+        .modal {
+            z-index: 9999 !important;
+        }
+
+        .modal-dialog {
+            z-index: 10000 !important;
+        }
+
+        @@media (max-width: 768px) {
+            .sidebar
+
+        {
+            width: 70px;
+        }
+
+        .sidebar.hidden {
+            width: 0;
+        }
+
+            .sidebar.hidden .menu-text,
+            .sidebar.hidden .prototype-text,
+            .sidebar.hidden .user-details .user-info {
+                display: none;
+            }
+
+        .toggle-btn {
+            right: -17.5px;
+        }
+
+        .sidebar.hidden .menu-items {
+            align-items: center;
+        }
+
+        .sidebar.hidden a {
+            justify-content: center;
+        }
+
+        .sidebar.hidden .top-section .logo img {
+            width: 40px;
+        }
+
+        }
+    </style>
+</head>
+@inject IConfiguration Configuration
+
+@using Newtonsoft.Json
+@using System.Collections.Generic
+@{
+    string userName = Context.Session.GetString("UserName") ?? "";
+    var permisosJson = Context.Session.GetString("UserPermissions");
+    Dictionary<string, List<string>> permisos = permisosJson != null
+    ? JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(permisosJson)
+    : new Dictionary<string, List<string>>();
+}
+
+<body>
+    @if (!(ViewContext.RouteData.Values["Controller"]?.ToString() == "Auth"
+    && ViewContext.RouteData.Values["Action"]?.ToString() == "Login"))
+    {
+        <div class="wrapper">
+            <div class="sidebar" id="sidebar">
+                <div class="top-section">
+                    <div class="logo">
+                        <img src="https://campusnivelacion.ug.edu.ec/pluginfile.php/1/core_admin/logocompact/300x300/1731967065/logo-192x192%281%29%281%29.png"
+                             alt="Logo">
+                    </div>
+                    <div class="prototype-text">Prototipo GestionPAP</div>
+                </div>
+                <div class="menu-items" id="sidebarMenu">
+                    <a href="/Home">
+                        <i class="bi bi-house-fill"></i>
+                        <span class="menu-text">Inicio</span>
+                    </a>
+                    <!-- Menú Catálogos -->
+                    @{
+                        bool tienePermisoCatalogos = permisos.Keys.Any(key =>
+                        (key == "ObjetivosEstrategicosInstitucionales" && permisos[key].Contains("Lectura")) ||
+                        (key == "ProgramasPresupuestarios" && permisos[key].Contains("Lectura")) ||
+                        (key == "Riesgos" && permisos[key].Contains("Lectura")) ||
+                        (key == "Indicadores" && permisos[key].Contains("Lectura")) ||
+                        (key == "UnidadesEjecutoras" && permisos[key].Contains("Lectura")) ||
+                        (key == "UnidadesResponsables" && permisos[key].Contains("Lectura")) ||
+                        (key == "ObjetivosOperativos" && permisos[key].Contains("Lectura")) ||
+                        (key == "ObjetivosPlanNacionalDesarrollo" && permisos[key].Contains("Lectura")) ||
+                        (key == "PoliticasPlanNacionalDesarrollo" && permisos[key].Contains("Lectura")) ||
+                        (key == "ProductosInstitucionales" && permisos[key].Contains("Lectura")) ||
+                        (key == "ProgramasInstitucionales" && permisos[key].Contains("Lectura")) ||
+                        (key == "ProgramasNacionales" && permisos[key].Contains("Lectura")) ||
+                        (key == "Acciones" && permisos[key].Contains("Lectura")) ||
+                        (key == "Carreras" && permisos[key].Contains("Lectura")) ||
+                        (key == "EjesPlanNacionalDesarrollo" && permisos[key].Contains("Lectura")) ||
+                        (key == "Facultades" && permisos[key].Contains("Lectura")) ||
+                        (key == "MetasPlanNacionalDesarrollo" && permisos[key].Contains("Lectura"))
+                        );
+                    }
+
+
+                    @if (tienePermisoCatalogos)
+                    {
+                        <a href="/Catalogos">
+                            <i class="bi bi-grid-fill"></i>
+                            <span class="menu-text">Catálogos</span>
+                        </a>
+                    }
+                    <!-- Menú Gestión -->
+                    @if ((permisos.ContainsKey("Actividades") && permisos["Actividades"].Contains("Lectura")) ||
+                   (permisos.ContainsKey("ObrasTareas") && permisos["ObrasTareas"].Contains("Lectura")) ||
+                   (permisos.ContainsKey("EjecucionesMensuales") && permisos["EjecucionesMensuales"].Contains("Lectura")))
+                    {
+                        <a class="submenu-toggle" data-bs-toggle="collapse" href="#gestionSubMenu" role="button"
+                           aria-expanded="false" aria-controls="gestionSubMenu">
+                            <i class="bi bi-bar-chart-fill"></i>
+                            <span class="menu-text">Gestión</span>
+                        </a>
+                        <div class="collapse" id="gestionSubMenu" data-bs-parent="#sidebarMenu">
+                            @if (permisos.ContainsKey("Actividades") && permisos["Actividades"].Contains("Lectura"))
+                            {
+                                <a asp-controller="Actividades" asp-action="Index" class="submenu-link">Actividades</a>
+
+                            }
+                            @if (permisos.ContainsKey("ObrasTareas") && permisos["ObrasTareas"].Contains("Lectura"))
+                            {
+                                <a asp-controller="ObrasTareas" asp-action="Index" class="submenu-link">Obras y Tareas</a>
+                            }
+                        </div>
+                    }
+                    <!-- Menú Reportes -->
+                    @if (permisos.ContainsKey("Reportes") && permisos["Reportes"].Contains("Lectura"))
+                    {
+                        <a class="submenu-toggle" data-bs-toggle="collapse" href="#reportesSubMenu" role="button"
+                           aria-expanded="false" aria-controls="reportesSubMenu">
+                            <i class="bi bi-file-earmark-text-fill"></i>
+                            <span class="menu-text">Reportes</span>
+                        </a>
+                        <div class="collapse" id="reportesSubMenu" data-bs-parent="#sidebarMenu">
+                            <a href="/Reportes" class="submenu-link">Generar Reportes</a>
+                        </div>
+                    }
+                    <!-- Menú Autenticación -->
+                    @if ((permisos.ContainsKey("Personas") && permisos["Personas"].Contains("Lectura")) ||
+                   (permisos.ContainsKey("Usuarios") && permisos["Usuarios"].Contains("Lectura")) ||
+                   (permisos.ContainsKey("Roles") && permisos["Roles"].Contains("Lectura")))
+                    {
+                        <a class="submenu-toggle" data-bs-toggle="collapse" href="#authSubMenu" role="button"
+                           aria-expanded="false" aria-controls="authSubMenu">
+                            <i class="bi bi-key-fill"></i>
+                            <span class="menu-text">Autenticación</span>
+                        </a>
+                        <div class="collapse" id="authSubMenu" data-bs-parent="#sidebarMenu">
+                            @if (permisos.ContainsKey("Personas") && permisos["Personas"].Contains("Lectura"))
+                            {
+                                <a asp-controller="Personas" asp-action="Index" class="submenu-link">Personas</a>
+                            }
+                            @if (permisos.ContainsKey("Usuarios") && permisos["Usuarios"].Contains("Lectura"))
+                            {
+                                <a asp-controller="Usuarios" asp-action="Index" class="submenu-link">Usuarios</a>
+                            }
+                            @if (permisos.ContainsKey("Roles") && permisos["Roles"].Contains("Lectura"))
+                            {
+                                <a asp-controller="Roles" asp-action="Index" class="submenu-link">Roles</a>
+                            }
+                        </div>
+                    }
+                </div>
+                <div class="user-details">
+                    <div class="user-avatar">
+                        @(string.IsNullOrEmpty(userName)
+                            ? ""
+                            : userName.Length >= 2
+                            ? userName.Substring(0, 2).ToUpper()
+                            : userName.ToUpper())
+                    </div>
+                    <div class="user-info">
+                        <span id="userName">@userName</span>
+                    </div>
+                    <div>
+                        <i class="bi bi-gear-fill settings-i" title="Ajustes" onclick="openSettingsModal()"></i>
+                        <i class="bi bi-box-arrow-right logout-icon" title="Cerrar sesión" onclick="logoutUser()"></i>
+                    </div>
+                </div>
+                <button class="toggle-btn" id="toggleButton" onclick="toggleSidebar()">
+                    <i class="bi bi-list"></i>
+                </button>
+            </div>
+
+            <div class="main-content" id="mainContent">
+                <main role="main">
+                    @RenderBody()
+                </main>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="container mx-auto px-5">
+            <main role="main">
+                @RenderBody()
+            </main>
+        </div>
+    }
+
+    <!-- Modal para selección de Planificación -->
+    <div class="modal fade" id="planificacionModal" data-bs-backdrop="static" data-bs-keyboard="false"
+         tabindex="-1" aria-labelledby="planificacionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 id="planificacionModalLabel">Seleccionar Planificación</h5>
+
+                </div>
+                <div class="modal-body">
+                    <form asp-controller="Home" asp-action="SetPlanificacion" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label for="planificacionSelect" class="form-label">Planificación</label>
+                            <select id="planificacionSelect" name="planificacionId" class="form-select" required></select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Seleccionar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container (Top-Right) -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+        <!-- Success/Info Toast -->
+        @if (TempData["ToastMessage"] != null)
+        {
+            var toastType = TempData["ToastType"]?.ToString().ToLower() ?? "info"; // Aseguramos que sea minúscula
+            var toastMessage = TempData["ToastMessage"].ToString();
+            <div class="toast align-items-center bg-@toastType text-white border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        @toastMessage
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+
+        <!-- Error Toast -->
+        @if (TempData["Error"] != null)
+        {
+            var errorMessage = TempData["Error"].ToString();
+            <div class="toast align-items-center bg-danger text-white border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        @errorMessage
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+    </div>
+
+    @{
+        // Recuperamos el valor de la sesión y lo parseamos
+        int planificacionNumerica = 0;
+        var valorSesion = Context.Session.GetString("PlanificacionId");
+        bool planificacionSeleccionada = int.TryParse(valorSesion, out planificacionNumerica) && planificacionNumerica > 0;
+    }
+    <script>
+        var baseUrl = '@Configuration["ApiSettings:BaseUrl"]';
+
+        // Mostrar u ocultar sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('hidden');
+            // Si ocultamos, cerramos todos los submenús abiertos
+            if (sidebar.classList.contains('hidden')) {
+                const openSubmenus = document.querySelectorAll('.collapse.show');
+                openSubmenus.forEach((submenu) => {
+                    submenu.classList.remove('show');
+                    const toggleLink = document.querySelector(`[href="#${submenu.id}"]`);
+                    if (toggleLink) {
+                        toggleLink.setAttribute('aria-expanded', 'false');
+                    }
+                    localStorage.removeItem(submenu.id);
+                });
+            }
+        }
+
+        async function logoutUser() {
+            const response = await fetch('/Auth/Logout', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': getAntiForgeryToken(),
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (response.ok) {
+                window.location.href = '/Auth/Login';
+            } else {
+                alert('Error al cerrar sesión.');
+            }
+        }
+
+        function getAntiForgeryToken() {
+            const name = '__RequestVerificationToken';
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.startsWith(name + '=')) {
+                    return decodeURIComponent(cookie.substring(name.length + 1));
+                }
+            }
+            return '';
+        }
+
+        function openSettingsModal() {
+            const modalInstance = new bootstrap.Modal(document.getElementById('planificacionModal'));
+            modalInstance.show();
+        }
+
+        function loadPlanificaciones(url, selectId, defaultOptionText) {
+            return fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("HTTP error " + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const selectElement = document.getElementById(selectId);
+                    if (selectElement) {
+                        selectElement.innerHTML = "";
+                        const defaultOption = document.createElement("option");
+                        defaultOption.value = "";
+                        defaultOption.text = defaultOptionText;
+                        selectElement.add(defaultOption);
+
+                        if (data && data.data) {
+                            data.data.forEach(item => {
+                                const option = document.createElement("option");
+                                option.value = item.planificacionId;
+                                option.text = item.descripcion;
+                                selectElement.add(option);
+                            });
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading planification:", error);
+                    return Promise.resolve();
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const allCollapses = document.querySelectorAll('.collapse');
+            allCollapses.forEach(function (collapseEl) {
+                const id = collapseEl.id;
+                // Ver si este submenú estaba previamente abierto
+                if (localStorage.getItem(id) === 'open') {
+                    collapseEl.classList.add('show');
+                    const toggleLink = document.querySelector('[href="#' + id + '"]');
+                    if (toggleLink) toggleLink.setAttribute('aria-expanded', 'true');
+                }
+
+                // Evento cuando se abre un collapse
+                collapseEl.addEventListener('shown.bs.collapse', function () {
+                    localStorage.setItem(id, 'open');
+                    const toggleLink = document.querySelector('[href="#' + id + '"]');
+                    if (toggleLink) toggleLink.setAttribute('aria-expanded', 'true');
+                });
+
+                // Evento cuando se cierra un collapse
+                collapseEl.addEventListener('hidden.bs.collapse', function () {
+                    localStorage.removeItem(id);
+                    const toggleLink = document.querySelector('[href="#' + id + '"]');
+                    if (toggleLink) toggleLink.setAttribute('aria-expanded', 'false');
+                });
+            });
+
+            // Si el sidebar está oculto, al hacer clic en un menú, primero lo mostramos
+            document.querySelectorAll('.submenu-toggle').forEach(function(toggle) {
+                toggle.addEventListener('click', function(e) {
+                    const sidebar = document.getElementById('sidebar');
+                    if (sidebar.classList.contains('hidden')) {
+                        e.preventDefault();
+                        toggleSidebar();
+                        setTimeout(() => {
+                            const targetElement = document.querySelector(toggle.getAttribute('href'));
+                            if (targetElement) {
+                                new bootstrap.Collapse(targetElement, { toggle: true });
+                            }
+                        }, 300);
+                    }
+                });
+            });
+
+            const planificacionModalEl = document.getElementById('planificacionModal');
+            planificacionModalEl.addEventListener('show.bs.modal', function () {
+                loadPlanificaciones(
+                    baseUrl + "/api/PlanificacionesAnuales",
+                    'planificacionSelect',
+                    'Seleccione Planificación'
+                );
+            });
+
+            // Variables pasadas desde el servidor
+        let planificacionSeleccionada = @planificacionSeleccionada.ToString().ToLower();
+
+           let isLoginPage = ('@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Auth"
+               && ViewContext.RouteData.Values["Action"]?.ToString() == "Login")').toLowerCase() === 'true';
+
+           if (!planificacionSeleccionada && !isLoginPage) {
+               openSettingsModal();
+           }
+            // Mostrar toasts automáticamente
+            const toastContainer = document.querySelector('.toast-container');
+            const toastElements = toastContainer.querySelectorAll('.toast');
+            toastElements.forEach(function (toastEl) {
+                const toast = new bootstrap.Toast(toastEl);
+                toast.show();
+            });
+        });
+    </script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+
+</html>

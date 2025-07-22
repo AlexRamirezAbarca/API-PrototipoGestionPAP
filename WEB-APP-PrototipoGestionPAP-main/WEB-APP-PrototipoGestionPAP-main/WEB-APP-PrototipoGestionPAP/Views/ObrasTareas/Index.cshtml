@@ -1,0 +1,798 @@
+﻿@model List<WEB_APP_PrototipoGestionPAP.Models.ObrasTareas>
+@inject IConfiguration Configuration
+
+@{
+    ViewBag.Title = "Obras/Tareas con Ejecuciones (Datos Mapeados)";
+    var currentFilter = ViewBag.Filter as string;
+    var currentFilterField = ViewBag.FilterField as string;
+    int currentPage = ViewBag.CurrentPage != null ? (int)ViewBag.CurrentPage : 1;
+    int totalPages = ViewBag.TotalPages != null ? (int)ViewBag.TotalPages : 1;
+
+    var ejecucionEditar = ViewBag.EjecucionEditar as WEB_APP_PrototipoGestionPAP.Models.EjecucionesMensuales;
+
+    var permisos = ViewBag.Permisos as Dictionary<string, List<string>>;
+
+    bool permisoEscrituraObrasTareas = permisos != null
+        && permisos.ContainsKey("ObrasTareas")
+        && permisos["ObrasTareas"].Contains("Escritura");
+
+    bool permisoActualizacionObrasTareas = permisos != null
+        && permisos.ContainsKey("ObrasTareas")
+        && permisos["ObrasTareas"].Contains("Actualización");
+
+    bool permisoEliminacionObrasTareas = permisos != null
+        && permisos.ContainsKey("ObrasTareas")
+        && permisos["ObrasTareas"].Contains("Eliminación");
+
+    bool permisoEscrituraEjecucionesMensuales = permisos != null
+        && permisos.ContainsKey("EjecucionesMensuales")
+        && permisos["EjecucionesMensuales"].Contains("Escritura");
+
+    bool permisoActualizacionEjecucionesMensuales = permisos != null
+        && permisos.ContainsKey("EjecucionesMensuales")
+        && permisos["EjecucionesMensuales"].Contains("Actualización");
+
+    bool permisoEliminacionEjecucionesMensuales = permisos != null
+        && permisos.ContainsKey("EjecucionesMensuales")
+        && permisos["EjecucionesMensuales"].Contains("Eliminación");
+
+    var planificacion = Context.Session.GetString("PlanificacionId");
+
+}
+
+<style>
+    .btn-primary {
+        background-color: #004383;
+        border-color: #004383;
+    }
+
+    .fab-add {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        font-size: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 0.5rem;
+        border: 1px solid #dee2e6;
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    #custom-icon {
+        padding: .25rem .1rem !important;
+    }
+
+    th {
+        background-color: #f8f9fa;
+    }
+
+    .col-actividad, .col-obratarea {
+        min-width: 300px;
+    }
+
+    tr {
+        max-height: 40px;
+        height: 40px;
+    }
+
+    .ejecuciones-container {
+        display: flex;
+        gap: 0.5rem;
+        overflow-x: auto;
+        max-width: 100%;
+        padding: 0.5rem;
+    }
+
+    .ejecucion-card {
+        width: 150px;
+        flex: 0 0 auto;
+        border: 1px solid #ccc;
+        border-radius: 0.5rem;
+        background-color: #e7f1ff;
+        box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .ejecucion-card-header {
+        background-color: #004383;
+        color: #fff;
+        padding: 0.3rem;
+        border-top-left-radius: 0.5rem;
+        border-top-right-radius: 0.5rem;
+        font-size: 0.9rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-inline: 10px;
+    }
+
+    .ejecucion-month {
+        text-align: left;
+    }
+
+    .ejecucion-actions {
+        display: flex;
+        gap: 0.25rem;
+    }
+
+    .btn-edit .bi {
+        color: #ffffff;
+    }
+
+    .btn-delete .bi {
+        color: #dc3545;
+    }
+
+    .btn-add .bi {
+        color: white;
+    }
+
+    .ejecucion-card-body {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+        text-align: left;
+    }
+
+        .ejecucion-card-body p {
+            margin: 0.2rem 0;
+        }
+
+    .ejecucion-card.agregar {
+        background-color: #d4edda;
+        color: #155724;
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: bold;
+    }
+
+    .card {
+        margin: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    .card-header {
+        background-color: #f8f9fa;
+        text-align: center;
+        padding: 1rem;
+        font-weight: bold;
+    }
+
+    .card-body {
+        padding: 1rem;
+        overflow: auto;
+    }
+
+    .pagination-custom .page-link {
+        background-color: white;
+        border-color: #dee2e6;
+        color: #6c757d;
+    }
+
+        .pagination-custom .page-link:hover {
+            background-color: #f8f9fa;
+            border-color: #cfd4da;
+            color: #343a40;
+        }
+
+    .pagination-custom .page-item.active .page-link {
+        background-color: #004383 !important;
+        border-color: #004383 !important;
+        color: white !important;
+        font-weight: bold;
+        border-width: 2px;
+    }
+
+        .pagination-custom .page-item.active .page-link:hover {
+            background-color: #003366 !important;
+            border-color: #003366 !important;
+            color: white !important;
+        }
+
+    .pagination-custom .page-item.disabled .page-link {
+        border-color: #dee2e6;
+        color: transparent;
+        cursor: not-allowed;
+    }
+
+    .is-invalid {
+        border-color: #dc3545;
+    }
+
+    .spinner-modal {
+        background-color: rgba(255, 255, 255, 0.7);
+        z-index: 10;
+    }
+</style>
+
+@functions {
+    public List<int> GetMonthsInRange(DateOnly startDate, DateOnly endDate)
+    {
+        var months = new List<int>();
+        var current = new DateOnly(startDate.Year, startDate.Month, 1);
+        var end = new DateOnly(endDate.Year, endDate.Month, 1);
+
+        while (current <= end)
+        {
+            months.Add(current.Month);
+            current = current.AddMonths(1);
+        }
+
+        return months;
+    }
+
+    public string GetMonthName(int monthNumber)
+    {
+        return monthNumber switch
+        {
+            1 => "Enero",
+            2 => "Febrero",
+            3 => "Marzo",
+            4 => "Abril",
+            5 => "Mayo",
+            6 => "Junio",
+            7 => "Julio",
+            8 => "Agosto",
+            9 => "Septiembre",
+            10 => "Octubre",
+            11 => "Noviembre",
+            12 => "Diciembre",
+            _ => "Desconocido"
+        };
+    }
+}
+
+<div class="card m-2">
+    <div class="card-header text-center bg-light">
+        <h3 class="m-0 fw-bold">Obras/Tareas con Ejecuciones</h3>
+    </div>
+    <div class="card-body">
+        <form id="searchForm" method="get" action="@Url.Action("Index", "ObrasTareas")" class="mb-3">
+            <div class="d-flex">
+                <input type="text" class="form-control me-2" id="searchInput" name="filter" placeholder="Buscar..." value="@currentFilter" />
+                @Html.DropDownList("filterField", new SelectList(new[] {
+                new { Value = "Actividad", Text = "Filtrar por Actividad" },
+                new { Value = "ObraTarea", Text = "Filtrar por Obra/Tarea" }
+                }, "Value", "Text", currentFilterField), new { @class = "form-select", id = "filterFieldSelect" })
+                <input type="hidden" name="page" value="1" id="currentPage" />
+            </div>
+        </form>
+
+        <table class="table table-bordered table-striped">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th class="col-actividad">Actividad</th>
+                    <th class="col-obratarea">Obra/Tarea</th>
+                    <th class="col-recurso">Recursos Actividad</th>
+                    <th class="col-recurso">Recursos Restantes</th>
+                    <th>Fecha Desde</th>
+                    <th>Fecha Hasta</th>
+                    <th>Ejecuciones Mensuales</th>
+                    @if (permisoActualizacionObrasTareas || permisoEliminacionObrasTareas)
+                    {
+                        <th class="text-center">Acciones</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var obra in Model)
+                {
+                    <tr>
+                        <td>@obra.ObraTareaId</td>
+                        <td class="col-actividad" title="@obra.Actividad.Descripcion">@obra.Actividad.Descripcion</td>
+                        <td class="col-obratarea" title="@obra.ObraTarea">@obra.ObraTarea</td>
+                        <td class="col-recurso" title="@obra.Actividad.RecursosActividad">@obra.Actividad.RecursosActividad</td>
+                        <td class="col-recurso" title="@obra.Actividad.RecursosRestantes">@obra.Actividad.RecursosRestantes</td>
+                        <td>@obra.FechaDesde.ToString("dd/MM/yyyy")</td>
+                        <td>@obra.FechaHasta.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            <div class="ejecuciones-container">
+                                @{
+                                    var mesesEnRango = GetMonthsInRange(obra.FechaDesde, obra.FechaHasta);
+                                }
+                                @foreach (var mes in mesesEnRango)
+                                {
+                                    var ejecucion = obra.EjecucionesMensuales.FirstOrDefault(e => e.Mes == mes);
+                                    string monthName = GetMonthName(mes);
+
+                                    <div class="ejecucion-card" title="Ej. @(ejecucion != null ? ejecucion.EjecucionId.ToString() : "Sin Ejecución")">
+                                        <div class="ejecucion-card-header d-flex align-items-center">
+                                            <div class="ejecucion-month">
+                                                <strong>@monthName</strong>
+                                            </div>
+                                            <div class="ejecucion-actions ms-auto">
+                                                @if (ejecucion != null)
+                                                {
+                                                    @if (permisoActualizacionEjecucionesMensuales)
+                                                    {
+                                                        <a id="custom-icon"
+                                                           href="#"
+                                                           class="btn btn-sm btn-edit"
+                                                           title="Editar"
+                                                           data-bs-toggle="modal"
+                                                           data-bs-target="#editarModal"
+                                                           data-id="@ejecucion.EjecucionId"
+                                                           data-obratarea="@obra.ObraTareaId"
+                                                           data-mes="@ejecucion.Mes"
+                                                           data-mes-nombre="@GetMonthName(ejecucion.Mes)"
+                                                           data-monto="@ejecucion.Monto"
+                                                           data-porcentaje="@ejecucion.PorcentajeEjecucion"
+                                                           data-recursosrestantes="@obra.Actividad.RecursosRestantes.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)"
+data-recursosactividad="@obra.Actividad.RecursosActividad.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)"
+                                                           data-descripcion="@ejecucion.Descripcion">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                    }
+                                                }
+                                                @if (ejecucion == null && permisoEscrituraEjecucionesMensuales)
+                                                {
+                                                    <a id="custom-icon"
+                                                       href="#"
+                                                       class="btn btn-sm btn-add"
+                                                       title="Agregar"
+                                                       data-bs-toggle="modal"
+                                                       data-bs-target="#agregarEjecucionModal"
+                                                       data-obratarea="@obra.ObraTareaId"
+                                                       data-mes="@mes"
+                                                       data-mes-nombre="@GetMonthName(mes)"
+                                                       data-recursosrestantes="@obra.Actividad.RecursosRestantes"
+                                                       data-recursosactividad="@obra.Actividad.RecursosActividad">
+                                                        <i class="bi bi-plus"></i>
+                                                    </a>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="ejecucion-card-body">
+                                            @if (ejecucion != null)
+                                            {
+                                                <p><strong>Monto:</strong> $@ejecucion.Monto</p>
+                                                <p><strong>% Ejecución:</strong> @ejecucion.PorcentajeEjecucion</p>
+                                                <strong>Descripcion:</strong>
+                                                <p>@ejecucion.Descripcion</p>
+                                            }
+                                            else
+                                            {
+                                                <p><em>No hay ejecución registrada.</em></p>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </td>
+                        @if (permisoActualizacionObrasTareas || permisoEliminacionObrasTareas)
+                        {
+                            <td>
+                                <div class="d-flex gap-2 justify-content-center">
+                                    @if (permisoActualizacionObrasTareas)
+                                    {
+                                        <a href="#"
+                                           class="btn btn-sm btn-outline-secondary btn-editar-obra"
+                                           data-bs-toggle="modal" data-bs-target="#editarObraModal"
+                                           data-id="@obra.ObraTareaId"
+                                           data-actividadid="@obra.ActividadId"
+                                           data-obratarea="@obra.ObraTarea"
+                                           data-fechadesde="@obra.FechaDesde.ToString("yyyy-MM-dd")"
+                                           data-fechahasta="@obra.FechaHasta.ToString("yyyy-MM-dd")">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    }
+                                    @if (permisoEliminacionObrasTareas)
+                                    {
+                                        <form action="@Url.Action("Eliminar", "ObrasTareas", new { id = obra.ObraTareaId })" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center pagination-custom">
+                @if (currentPage > 1)
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="@Url.Action("Index", new { page = currentPage - 1, filter = currentFilter, filterField = currentFilterField })">&laquo;</a>
+                    </li>
+                }
+                else
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo;</span>
+                    </li>
+                }
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    var activeClass = i == currentPage ? "active" : "";
+                    <li class="page-item @activeClass">
+                        <a class="page-link" href="@Url.Action("Index", new { page = i, filter = currentFilter, filterField = currentFilterField })">@i</a>
+                    </li>
+                }
+                @if (currentPage < totalPages)
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="@Url.Action("Index", new { page = currentPage + 1, filter = currentFilter, filterField = currentFilterField })">&raquo;</a>
+                    </li>
+                }
+                else
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">&raquo;</span>
+                    </li>
+                }
+            </ul>
+        </nav>
+
+        @if (permisoEscrituraObrasTareas)
+        {
+            <button type="button" class="btn btn-primary fab-add" data-bs-toggle="modal" data-bs-target="#agregarObraModal">+</button>
+        }
+    </div>
+
+    <div class="modal fade" id="agregarObraModal" tabindex="-1" aria-labelledby="agregarObraModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="@Url.Action("Agregar", "ObrasTareas")" method="post" id="formAgregarObra">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="agregarObraModalLabel">Agregar Nueva Obra/Tarea</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body position-relative">
+                        <div id="spinnerActividadesAgregar" class="d-flex justify-content-center align-items-center position-absolute top-0 start-0 w-100 h-100 d-none spinner-modal">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando Actividades...</span>
+                            </div>
+                        </div>
+                        <div id="formObraAgregar">
+                            <div class="mb-3">
+                                <label for="ddlActividadAgregar" class="form-label">Actividad</label>
+                                <select id="ddlActividadAgregar" name="ActividadId" class="form-select" required>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="txtObraTarea" class="form-label">Obra/Tarea</label>
+                                <input type="text" class="form-control" id="txtObraTarea" name="ObraTarea" required />
+                            </div>
+                            <div class="mb-3">
+                                <label for="txtFechaDesde" class="form-label">Fecha Desde</label>
+                                <input type="date" class="form-control" id="txtFechaDesde" name="FechaDesde" required />
+                            </div>
+                            <div class="mb-3">
+                                <label for="txtFechaHasta" class="form-label">Fecha Hasta</label>
+                                <input type="date" class="form-control" id="txtFechaHasta" name="FechaHasta" required />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="submit" class="btn btn-primary" id="btnGuardarAgregarObra" disabled>Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editarObraModal" tabindex="-1" aria-labelledby="editarObraModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background-color:#fff; color:#000;">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editarObraModalLabel">Editar Obra/Tarea</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body position-relative">
+                    <div id="spinnerActividadesEditar" class="d-flex justify-content-center align-items-center position-absolute top-0 start-0 w-100 h-100 d-none spinner-modal">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando Actividades...</span>
+                        </div>
+                    </div>
+                    <div id="formObraEditar" style="display: none;">
+                        <form action="@Url.Action("Editar", "ObrasTareas")" method="post" id="formEditarObra">
+                            <input type="hidden" name="ObraTareaId" id="hiddenObraTareaId" />
+                            <div class="mb-3">
+                                <label for="ddlActividadEditar" class="form-label">Actividad</label>
+                                <select id="ddlActividadEditar" name="ActividadId" class="form-select" required>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="txtObraTareaEdit" class="form-label">Obra/Tarea</label>
+                                <input type="text" class="form-control" id="txtObraTareaEdit" name="ObraTarea" required />
+                            </div>
+                            <div class="mb-3">
+                                <label for="txtFechaDesdeEdit" class="form-label">Fecha Desde</label>
+                                <input type="date" class="form-control" id="txtFechaDesdeEdit" name="FechaDesde" required />
+                            </div>
+                            <div class="mb-3">
+                                <label for="txtFechaHastaEdit" class="form-label">Fecha Hasta</label>
+                                <input type="date" class="form-control" id="txtFechaHastaEdit" name="FechaHasta" required />
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-primary" id="btnGuardarEditarObra" disabled>Guardar cambios</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="agregarEjecucionModal" tabindex="-1" aria-labelledby="agregarEjecucionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background-color:#fff; color:#000;">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="agregarEjecucionModalLabel">Agregar Nueva Ejecución Mensual</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="@Url.Action("AgregarEjecucion", "ObrasTareas")" method="post" id="formAgregarEjecucion">
+                        <input type="hidden" name="ObraTareaId" id="hiddenObraTareaIdEjecucion" />
+                        <input type="hidden" name="Mes" id="hiddenMesEjecucionAgregar" />
+                        <input type="hidden" id="hiddenPorcentajeEjecucionAgregar" name="PorcentajeEjecucion" value="0" />
+                        <div class="mb-3">
+                            <label class="form-label">Mes</label>
+                            <p id="displayMesAgregar" class="form-control-plaintext fw-bold"></p>
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtMonto" class="form-label">Monto</label>
+                            <input type="number" step="0.01" class="form-control" id="txtMonto" name="Monto" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtDescripcionAgregar" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="txtDescripcionAgregar" name="Descripcion" rows="3"></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editarModal" tabindex="-1" aria-labelledby="editarModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background-color:#fff; color:#000;">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editarModalLabel">Editar Ejecución Mensual</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="@Url.Action("EditarEjecucion", "ObrasTareas")" method="post" id="formEditarEjecucion">
+                        <input type="hidden" name="EjecucionId" id="hiddenEjecucionId" value="@ejecucionEditar?.EjecucionId" />
+                        <input type="hidden" name="ObraTareaId" id="hiddenObraTareaIdEjecucionEdit" />
+                        <input type="hidden" name="Mes" id="hiddenMesEjecucionEditar" />
+                        <input type="hidden" id="hiddenPorcentajeEjecucionEditar" name="PorcentajeEjecucion" value="@ejecucionEditar?.PorcentajeEjecucion" />
+                        <div class="mb-3">
+                            <label class="form-label">Mes</label>
+                            <p id="displayMesEditar" class="form-control-plaintext fw-bold"></p>
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtMontoEdit" class="form-label">Monto</label>
+                            <input type="number" step="0.01" class="form-control" id="txtMontoEdit" name="Monto" value="@ejecucionEditar?.Monto" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtDescripcionEdit" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="txtDescripcionEdit" name="Descripcion" rows="3">@ejecucionEditar?.Descripcion</textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var baseUrl = '@Configuration["ApiSettings:BaseUrl"]';
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            function loadCatalog(url, selectId, defaultOptionText, valueProperty, textProperty) {
+                return fetch(url)
+                    .then(response => {
+                        if (!response.ok) throw new Error("HTTP error " + response.status);
+                        return response.json();
+                    })
+                    .then(data => {
+                        const selectElement = document.getElementById(selectId);
+                        if (selectElement) {
+                            selectElement.innerHTML = '';
+                            let defaultOption = document.createElement('option');
+                            defaultOption.value = '';
+                            defaultOption.text = defaultOptionText;
+                            selectElement.add(defaultOption);
+                            if (data && data.datos.data) {
+                                data.datos.data.forEach(item => {
+                                    let option = document.createElement('option');
+                                    option.value = item[valueProperty];
+                                    option.text = item[textProperty];
+                                    selectElement.add(option);
+                                });
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error(`Error loading catalog from ${url}:`, error);
+                        return Promise.resolve();
+                    });
+            }
+
+            function loadActivitiesForAgregar() {
+                let planificacionActual = sessionStorage.getItem('PlanificacionSeleccionada');
+                return loadCatalog(
+                    baseUrl + '/api/Actividades?planificacionId=' + @planificacion,
+                    'ddlActividadAgregar',
+                    'Seleccione una Actividad',
+                    'actividadId',
+                    'descripcion'
+                );
+            }
+            function loadActivitiesForEditar() {
+                let planificacionActual = sessionStorage.getItem('PlanificacionSeleccionada');
+                return loadCatalog(
+                     baseUrl + '/api/Actividades?planificacionId=' + @planificacion,
+                    'ddlActividadEditar',
+                    'Seleccione una Actividad',
+                    'actividadId',
+                    'descripcion'
+                );
+            }
+
+            let agregarObraModal = document.getElementById('agregarObraModal');
+            agregarObraModal.addEventListener('show.bs.modal', function () {
+                loadActivitiesForAgregar().then(() => {
+                    document.getElementById('btnGuardarAgregarObra').disabled = false;
+                });
+            });
+
+            let editarObraModal = document.getElementById('editarObraModal');
+            editarObraModal.addEventListener('show.bs.modal', function (event) {
+                let spinner = document.getElementById('spinnerActividadesEditar');
+                let formEditar = document.getElementById('formObraEditar');
+                spinner.classList.remove('d-none');
+                spinner.style.display = 'flex';
+                formEditar.style.display = 'none';
+
+                let button = event.relatedTarget;
+                let obraTareaId = button.getAttribute('data-id');
+                let actividadId = button.getAttribute('data-actividadid');
+                let obraTarea = button.getAttribute('data-obratarea');
+                let fechaDesde = button.getAttribute('data-fechadesde');
+                let fechaHasta = button.getAttribute('data-fechahasta');
+
+                loadActivitiesForEditar()
+                    .then(() => {
+                        document.getElementById('ddlActividadEditar').value = actividadId;
+                        document.getElementById('hiddenObraTareaId').value = obraTareaId;
+                        document.getElementById('txtObraTareaEdit').value = obraTarea;
+                        document.getElementById('txtFechaDesdeEdit').value = fechaDesde;
+                        document.getElementById('txtFechaHastaEdit').value = fechaHasta;
+                    })
+                    .finally(() => {
+                        spinner.classList.add('d-none');
+                        formEditar.style.display = 'block';
+                        document.getElementById('btnGuardarEditarObra').disabled = false;
+                    });
+            });
+
+            let searchInput = document.getElementById('searchInput');
+            let filterFieldSelect = document.getElementById('filterFieldSelect');
+            let searchForm = document.getElementById('searchForm');
+            let currentPageInput = document.getElementById('currentPage');
+            let debounceTimer;
+            function handleSearch() {
+                const query = searchInput.value.trim();
+                if (query.length > 4 || query.length === 0) {
+                    currentPageInput.value = 1;
+                    searchForm.submit();
+                }
+            }
+            searchInput.addEventListener('input', function () {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(handleSearch, 500);
+            });
+            filterFieldSelect.addEventListener('change', function () {
+                currentPageInput.value = 1;
+                searchForm.submit();
+            });
+            searchForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                currentPageInput.value = 1;
+                searchForm.submit();
+            });
+
+            let agregarEjecucionModal = document.getElementById('agregarEjecucionModal');
+            agregarEjecucionModal.addEventListener('show.bs.modal', function (event) {
+                let triggerElement = event.relatedTarget;
+                let obraTareaId = triggerElement.getAttribute('data-obratarea');
+                let mes = triggerElement.getAttribute('data-mes');
+                let mesNombre = triggerElement.getAttribute('data-mes-nombre');
+                let recursosRestantes = parseFloat(triggerElement.getAttribute('data-recursosrestantes') || 0);
+                let recursosActividad = parseFloat(triggerElement.getAttribute('data-recursosactividad') || 0);
+
+                document.getElementById('hiddenObraTareaIdEjecucion').value = obraTareaId;
+                document.getElementById('hiddenMesEjecucionAgregar').value = mes;
+                document.getElementById('displayMesAgregar').innerText = mesNombre;
+
+                let txtMonto = document.getElementById('txtMonto');
+                txtMonto.value = "";
+                txtMonto.setAttribute("max", recursosRestantes);
+
+                txtMonto.addEventListener('input', function () {
+                    let val = parseFloat(txtMonto.value) || 0;
+                    if (val > recursosRestantes) {
+                        txtMonto.value = recursosRestantes;
+                        val = recursosRestantes;
+                    }
+                    let hiddenPct = document.getElementById('hiddenPorcentajeEjecucionAgregar');
+                    let pct = recursosActividad > 0 ? (val / recursosActividad) * 100 : 0;
+                    hiddenPct.value = pct.toFixed(2);
+                });
+            });
+
+            let editarEjecucionModal = document.getElementById('editarModal');
+            editarEjecucionModal.addEventListener('show.bs.modal', function (event) {
+                let button = event.relatedTarget;
+                let ejecucionId = button.getAttribute('data-id');
+                let obraTareaId = button.getAttribute('data-obratarea');
+                let mes = button.getAttribute('data-mes');
+                let monto = parseFloat(button.getAttribute('data-monto') || 0);
+                let porcentaje = parseFloat(button.getAttribute('data-porcentaje') || 0);
+                let mesNombre = button.getAttribute('data-mes-nombre');
+                let recursosRestantes = parseFloat(button.getAttribute('data-recursosrestantes') || 0);
+                let recursosActividad = parseFloat(button.getAttribute('data-recursosactividad') || 0);
+                let descripcion = button.getAttribute('data-descripcion') || '';
+
+                document.getElementById('hiddenEjecucionId').value = parseInt(ejecucionId);
+                document.getElementById('hiddenObraTareaIdEjecucionEdit').value = parseInt(obraTareaId);
+                document.getElementById('hiddenMesEjecucionEditar').value = parseInt(mes);
+                document.getElementById('displayMesEditar').innerText = mesNombre;
+                document.getElementById('txtMontoEdit').value = monto;
+                document.getElementById('hiddenPorcentajeEjecucionEditar').value = porcentaje;
+                document.getElementById('txtDescripcionEdit').value = descripcion;
+
+                let montoMax = parseFloat(recursosRestantes) + monto;
+
+                let txtMontoEdit = document.getElementById('txtMontoEdit');
+                txtMontoEdit.setAttribute("max", montoMax);
+
+                txtMontoEdit.addEventListener('input', function () {
+                    let val = parseFloat(txtMontoEdit.value) || 0;
+                    if (val > montoMax) {
+                        txtMontoEdit.value = montoMax;
+                        val = montoMax;
+                    }
+                    let hiddenPct = document.getElementById('hiddenPorcentajeEjecucionEditar');
+                    let pct = recursosActividad > 0 ? (val / recursosActividad) * 100 : 0;
+                    hiddenPct.value = pct.toFixed(2);
+                });
+            });
+        });
+    </script>

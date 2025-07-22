@@ -1,0 +1,105 @@
+﻿@model List<Catalogo>
+
+@{
+    ViewData["Title"] = "Catálogos";
+}
+
+<style>
+    .catalog-card {
+        position: relative; 
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        overflow: hidden;
+    }
+
+        .catalog-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .catalog-card img {
+            height: 150px;
+            width: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .catalog-card::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 67, 131, 0.6);
+            transition: background-color 0.3s ease;
+            z-index: 1; 
+        }
+
+        .catalog-card:hover::after {
+            background-color: rgba(0, 67, 131, 0.8); 
+        }
+
+    .catalog-title-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #fff;
+        font-size: 1.2rem;
+        font-weight: bold;
+        text-align: center;
+        padding: 0 10px;
+        z-index: 2; 
+    }
+
+    @@media (max-width: 768px) {
+        .catalog-card img
+
+    {
+        height: 120px;
+    }
+
+    .catalog-title-overlay {
+        font-size: 1rem;
+    }
+
+    }
+</style>
+
+
+
+<div class="container mt-4">
+    <h2 class="mb-4">Catálogos</h2>
+    @if (Model != null && Model.Any())
+    {
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+            @foreach (var catalogo in Model)
+            {
+                <div class="col">
+                    <a href="@catalogo.Enlace" class="text-decoration-none text-dark">
+                        <div class="card h-100 catalog-card">
+                            <img src="@catalogo.ImagenUrl" class="card-img-top" alt="@catalogo.Nombre">
+                            <div class="catalog-title-overlay">
+                                @catalogo.Nombre
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info" role="alert">
+            No tienes permisos para ver ningún catálogo.
+        </div>
+    }
+</div>
+
+
+@section Scripts {
+    <script>
+    </script>
+}

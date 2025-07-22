@@ -1,0 +1,35 @@
+﻿@model WEB_APP_PrototipoGestionPAP.Models.ViewModels.CatalogViewModel<WEB_APP_PrototipoGestionPAP.Models.ObjetivosPlanNacionalDesarrollo>
+
+@if (Model.CanWrite)
+{
+    <div class="modal fade" id="agregarModal" tabindex="-1" aria-labelledby="agregarModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="@Url.Action(Model.AddActionName, Model.ControllerName)" method="post" id="formAgregar">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="agregarModalLabel">Agregar Nuevo @Model.Title</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="txtNombre" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="txtNombre" name="Nombre" required />
+                            <div class="invalid-feedback">El nombre es obligatorio.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtDescripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="txtDescripcion" name="Descripcion" rows="3" required></textarea>
+                            <div class="invalid-feedback">La descripción es obligatoria.</div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="submit" class="btn btn-primary" id="btnGuardarAgregar" disabled>Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}

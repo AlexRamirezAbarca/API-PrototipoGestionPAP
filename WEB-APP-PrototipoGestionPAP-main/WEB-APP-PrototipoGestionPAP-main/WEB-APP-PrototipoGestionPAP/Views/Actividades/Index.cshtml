@@ -1,0 +1,1170 @@
+﻿@model WEB_APP_PrototipoGestionPAP.Models.ViewModels.CatalogViewModel<WEB_APP_PrototipoGestionPAP.Models.Actividades>
+@inject IConfiguration Configuration
+
+@{
+    ViewBag.Title = Model.Title;
+    var currentFilter = ViewBag.Filter as string;
+    var currentFilterField = ViewBag.FilterField as string;
+    var planificacion = Context.Session.GetString("PlanificacionId");
+}
+
+<style>
+    /* Estilos para el paginador del dropdown */
+    .choices__pagination {
+        display: flex;
+        justify-content: center;
+        padding: 8px;
+        border-top: 1px solid #ddd;
+        background: #f8f9fa;
+    }
+
+        .choices__pagination button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+            .choices__pagination button:hover {
+                background: #e9ecef;
+            }
+
+            .choices__pagination button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+</style>
+
+<div class="card m-2">
+    <div class="card-header bg-light">
+        <div class="d-flex flex-wrap justify-content-center align-items-center">
+            <h3 class="m-0 fw-bold flex-grow-1 text-center">@Model.Title</h3>
+            <div class="dropdown text-end">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="columnToggleButton" data-bs-toggle="dropdown" aria-expanded="false">
+                    Columnas
+                </button>
+                <ul class="dropdown-menu p-2" aria-labelledby="columnToggleButton">
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-d" id="toggleColD" checked>
+                        <label class="form-check-label" for="toggleColD">D</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-planificacion" id="toggleColPlanificacion" checked>
+                        <label class="form-check-label" for="toggleColPlanificacion">Planificación</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-unidadresp" id="toggleColUnidadResp" checked>
+                        <label class="form-check-label" for="toggleColUnidadResp">Unidad Resp.</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-objestr" id="toggleColObjEstr" checked>
+                        <label class="form-check-label" for="toggleColObjEstr">Obj. Estrategico</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-unidadejec" id="toggleColUnidadEjec" checked>
+                        <label class="form-check-label" for="toggleColUnidadEjec">Unidad Ejec.</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-objoperativo" id="toggleColObjOperativo" checked>
+                        <label class="form-check-label" for="toggleColObjOperativo">Objetivo Operativo</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-descripcion" id="toggleColDescripcion" checked>
+                        <label class="form-check-label" for="toggleColDescripcion">Descripción</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-carrera" id="toggleColCarrera" checked>
+                        <label class="form-check-label" for="toggleColCarrera">Carrera</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-facultad" id="toggleColFacultad" checked>
+                        <label class="form-check-label" for="toggleColFacultad">Facultad</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-ejepn" id="toggleColEjePn" checked>
+                        <label class="form-check-label" for="toggleColEjePn">Eje Pn</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-objpn" id="toggleColObjPn" checked>
+                        <label class="form-check-label" for="toggleColObjPn">Obj Pn</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-politicapn" id="toggleColPoliticaPn" checked>
+                        <label class="form-check-label" for="toggleColPoliticaPn">Política Pn</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-metapn" id="toggleColMetaPn" checked>
+                        <label class="form-check-label" for="toggleColMetaPn">Meta Pn</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-prognac" id="toggleColProgNac" checked>
+                        <label class="form-check-label" for="toggleColProgNac">Prog. Nac.</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-proginst" id="toggleColProgInst" checked>
+                        <label class="form-check-label" for="toggleColProgInst">Prog. Inst.</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-prodinst" id="toggleColProdInst" checked>
+                        <label class="form-check-label" for="toggleColProdInst">Prod. Inst.</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-impacto" id="toggleColImpacto" checked>
+                        <label class="form-check-label" for="toggleColImpacto">Impacto</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-riesgo" id="toggleColRiesgo" checked>
+                        <label class="form-check-label" for="toggleColRiesgo">Riesgo</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-accion" id="toggleColAccion" checked>
+                        <label class="form-check-label" for="toggleColAccion">Acción</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-indicador" id="toggleColIndicador" checked>
+                        <label class="form-check-label" for="toggleColIndicador">Indicador</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-progpre" id="toggleColProgPre" checked>
+                        <label class="form-check-label" for="toggleColProgPre">Prog. Pre</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-itempres" id="toggleColItemPres" checked>
+                        <label class="form-check-label" for="toggleColItemPres">Ítem Presupuestario</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-fuente1" id="toggleColFuente1" checked>
+                        <label class="form-check-label" for="toggleColFuente1">Fuente1 Monto</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-fuente2" id="toggleColFuente2" checked>
+                        <label class="form-check-label" for="toggleColFuente2">Fuente2 Monto</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-fuente3" id="toggleColFuente3" checked>
+                        <label class="form-check-label" for="toggleColFuente3">Fuente3 Monto</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-recactividad" id="toggleColRecActividad" checked>
+                        <label class="form-check-label" for="toggleColRecActividad">Recursos Actividad</label>
+                    </li>
+                    <li>
+                        <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-recrestantes" id="toggleColRecRestantes" checked>
+                        <label class="form-check-label" for="toggleColRecRestantes">Recursos Restantes</label>
+                    </li>
+                    @if (Model.CanUpdate || Model.CanDelete)
+                    {
+                        <li>
+                            <input class="form-check-input me-1 column-toggle" type="checkbox" value="col-acciones" id="toggleColAcciones" checked>
+                            <label class="form-check-label" for="toggleColAcciones">Acciones</label>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <form id="searchForm" method="get" action="@Url.Action("Index", "Actividades")">
+            <div class="d-flex mb-3">
+                <div class="me-2 flex-grow-1">
+                    <input type="text" class="form-control" id="searchInput" name="filter" placeholder="Buscar..." value="@currentFilter" />
+                </div>
+                <div>
+                    @Html.DropDownList("filterField",
+                             new SelectList(new[] {
+                    new { Value = "Descripcion", Text = "Filtrar por Descripción" }
+                    },
+                             "Value", "Text", currentFilterField),
+                             new { @class = "form-select", id = "filterFieldSelect" })
+                </div>
+                <input type="hidden" name="page" value="1" id="currentPage" />
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped" id="tblActividades">
+                <thead class="table-light">
+                    <tr>
+                        <th class="col-d">D</th>
+                        <th class="col-planificacion">Planificación</th>
+                        <th class="col-unidadresp">Unidad Resp.</th>
+                        <th class="col-objestr">Obj. Estrategico</th>
+                        <th class="col-unidadejec">Unidad Ejec.</th>
+                        <th class="col-objoperativo">Objetivo Operativo</th>
+                        <th class="col-descripcion">Descripción</th>
+                        <th class="col-carrera">Carrera</th>
+                        <th class="col-facultad">Facultad</th>
+                        <th class="col-ejepn">Eje Pn</th>
+                        <th class="col-objpn">Obj Pn</th>
+                        <th class="col-politicapn">Política Pn</th>
+                        <th class="col-metapn">Meta Pn</th>
+                        <th class="col-prognac">Prog. Nac.</th>
+                        <th class="col-proginst">Prog. Inst.</th>
+                        <th class="col-prodinst">Prod. Inst.</th>
+                        <th class="col-impacto">Impacto</th>
+                        <th class="col-riesgo">Riesgo</th>
+                        <th class="col-accion">Acción</th>
+                        <th class="col-indicador">Indicador</th>
+                        <th class="col-progpre">Prog. Pre</th>
+                        <th class="col-itempres">Ítem Presupuestario</th>
+                        <th class="col-fuente1">Fuente1 Monto</th>
+                        <th class="col-fuente2">Fuente2 Monto</th>
+                        <th class="col-fuente3">Fuente3 Monto</th>
+                        <th class="col-recactividad">Recursos Actividad</th>
+                        <th class="col-recrestantes">Recursos Restantes</th>
+                        @if (Model.CanUpdate || Model.CanDelete)
+                        {
+                            <th class="col-acciones text-center">Acciones</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Items.Count > 0)
+                    {
+                        foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td class="col-d">@item.ActividadId</td>
+                                <td class="col-planificacion">@item.PlanificacionName</td>
+                                <td class="col-unidadresp">@item.UnidadRespName</td>
+                                <td class="col-objestr">@item.ObjEstrName</td>
+                                <td class="col-unidadejec">@item.UnidadEjecutoraName</td>
+                                <td class="col-objoperativo">@item.ObjetivoOperativoName</td>
+                                <td class="col-descripcion">@item.Descripcion</td>
+                                <td class="col-carrera">@item.CarreraName</td>
+                                <td class="col-facultad">@item.FacultadName</td>
+                                <td class="col-ejepn">@item.EjePnName</td>
+                                <td class="col-objpn">@item.ObjPnName</td>
+                                <td class="col-politicapn">@item.PoliticaPnName</td>
+                                <td class="col-metapn">@item.MetaPnName</td>
+                                <td class="col-prognac">@item.ProgramaNacName</td>
+                                <td class="col-proginst">@item.ProgramaInstName</td>
+                                <td class="col-prodinst">@item.ProductoInstName</td>
+                                <td class="col-impacto">@item.Impacto</td>
+                                <td class="col-riesgo">@item.Riesgo</td>
+                                <td class="col-accion">@item.AccionName</td>
+                                <td class="col-indicador">@item.IndicadorName</td>
+                                <td class="col-progpre">@item.ProgramaPreName</td>
+                                <td class="col-itempres">@item.ItemPresupuestario</td>
+                                <td class="col-fuente1">@item.Fuente1Monto.ToString("C")</td>
+                                <td class="col-fuente2">@item.Fuente2Monto.ToString("C")</td>
+                                <td class="col-fuente3">@item.Fuente3Monto.ToString("C")</td>
+                                <td class="col-recactividad">@item.RecursosActividad.ToString("C")</td>
+                                <td class="col-recrestantes">@item.RecursosRestantes.ToString("C")</td>
+                                @if (Model.CanUpdate || Model.CanDelete)
+                                {
+                                    <td class="col-acciones text-center">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            @if (Model.CanUpdate)
+                                            {
+                                                <a href="#" class="btn btn-sm btn-outline-secondary btn-edit"
+                                                   data-bs-toggle="modal"
+                                                   data-bs-target="#editarModal"
+                                                   data-id="@item.ActividadId"
+                                                   data-planificacionid="@item.PlanificacionId"
+                                                   data-unidadrespid="@item.UnidadRespId"
+                                                   data-objestrid="@item.ObjEstrId"
+                                                   data-unidadejecutoraid="@item.UnidadEjecutoraId"
+                                                   data-objetivooperativoid="@item.ObjetivoOperativoId"
+                                                   data-descripcion="@item.Descripcion"
+                                                   data-ejepnid="@item.EjePnId"
+                                                   data-objpnid="@item.ObjPnId"
+                                                   data-politicapnid="@item.PoliticaPnId"
+                                                   data-metapnid="@item.MetaPnId"
+                                                   data-programanacid="@item.ProgramaNacId"
+                                                   data-programainstid="@item.ProgramaInstId"
+                                                   data-productoinstid="@item.ProductoInstId"
+                                                   data-impacto="@item.Impacto"
+                                                   data-riesgo="@item.Riesgo"
+                                                   data-accionid="@item.AccionId"
+                                                   data-indicadorid="@item.IndicadorId"
+                                                   data-carreraid="@item.CarreraId"
+                                                   data-facultadid="@item.FacultadId"
+                                                   data-programapreid="@item.ProgramaPreId"
+                                                   data-itempresupuestario="@item.ItemPresupuestario"
+                                                   data-fuente1monto="@item.Fuente1Monto.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                                   data-fuente2monto="@item.Fuente2Monto.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                                   data-fuente3monto="@item.Fuente3Monto.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                                   data-recursosactividad="@item.RecursosActividad.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                                   data-recursosrestantes="@item.RecursosRestantes.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            }
+                                            @if (Model.CanDelete)
+                                            {
+                                                <form action="@Url.Action("Eliminar", Model.ControllerName, new { id = item.ActividadId })" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure to delete this item?');">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="@( (Model.CanUpdate || Model.CanDelete) ? 28 : 27 )" class="text-center">
+                                No records
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @Html.Partial("_Pagination", new WEB_APP_PrototipoGestionPAP.Models.ViewModels.PaginationViewModel
+   {
+       CurrentPage = Model.CurrentPage,
+       TotalPages = Model.TotalPages,
+       Filter = Model.CurrentFilter,
+       FilterField = Model.CurrentFilterField
+   })
+
+        @if (Model.CanWrite)
+        {
+            <button type="button" class="btn btn-primary fab-add" data-bs-toggle="modal" data-bs-target="#agregarModal"
+                    data-planificacionid="@planificacion">
+                +
+            </button>
+        }
+    </div>
+</div>
+
+<!-- Modal Agregar Actividad -->
+<div class="modal fade" id="agregarModal" tabindex="-1" aria-labelledby="agregarModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <form id="formAgregar" asp-action="Agregar" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="agregarModalLabel">Agregar Actividad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="spinnerAgregar"
+                         class="d-flex justify-content-center align-items-center position-absolute top-0 start-0 w-100 h-100 d-none"
+                         style="background-color: rgba(255,255,255,0.7); z-index: 10;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <input type="hidden" id="txtPlanificacionId" name="planificacionId" />
+                        <input type="hidden" id="actividadId" name="actividadId" />
+                        <input type="hidden" id="txtRecursosRestantes" name="recursosRestantes" />
+
+                        <div class="col-md-6">
+                            <label for="txtUnidadesResponsables" class="form-label">Unidades Responsables</label>
+                            <select class="form-select" id="txtUnidadesResponsables" name="unidadRespId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione una Unidad Responsable.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="txtObjetivosEstrategicosInstitucionales" class="form-label">Objetivos Estratégicos Institucionales</label>
+                            <select class="form-select" id="txtObjetivosEstrategicosInstitucionales" name="objEstrId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un Objetivo Estratégico Institucional.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="txtUnidadesEjecutoras" class="form-label">Unidades Ejecutoras</label>
+                            <select class="form-select" id="txtUnidadesEjecutoras" name="unidadEjecutoraId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione una Unidad Ejecutora.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="txtObjetivosOperativos" class="form-label">Objetivos Operativos</label>
+                            <select class="form-select" id="txtObjetivosOperativos" name="objetivoOperativoId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un Objetivo Operativo.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="txtEjesPlanNacionalDesarrollo" class="form-label">Ejes Plan Nacional Desarrollo</label>
+                            <select class="form-select" id="txtEjesPlanNacionalDesarrollo" name="ejePnId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un Eje Plan Nacional Desarrollo.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="txtObjetivosPlanNacionalDesarrollo" class="form-label">Objetivos Plan Nacional Desarrollo</label>
+                            <select class="form-select" id="txtObjetivosPlanNacionalDesarrollo" name="objPnId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un Objetivo Plan Nacional Desarrollo.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="txtPoliticasPlanNacionalDesarrollo" class="form-label">Políticas Plan Nacional Desarrollo</label>
+                            <select class="form-select" id="txtPoliticasPlanNacionalDesarrollo" name="politicaPnId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione una Política Plan Nacional Desarrollo.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="txtMetasPlanNacionalDesarrollo" class="form-label">Metas Plan Nacional Desarrollo</label>
+                            <select class="form-select" id="txtMetasPlanNacionalDesarrollo" name="metaPnId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione una Meta Plan Nacional Desarrollo.</div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="txtProgramasNacionales" class="form-label">Programas Nacionales</label>
+                            <select class="form-select" id="txtProgramasNacionales" name="programaNacId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un Programa Nacional.</div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="txtProgramasInstitucionales" class="form-label">Programas Institucionales</label>
+                            <select class="form-select" id="txtProgramasInstitucionales" name="programaInstId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un Programa Institucional.</div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="txtProductosInstitucionales" class="form-label">Productos Institucionales</label>
+                            <select class="form-select" id="txtProductosInstitucionales" name="productoInstId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un Producto Institucional.</div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="txtProgramasPresupuestarios" class="form-label">Programas Presupuestarios</label>
+                            <select class="form-select" id="txtProgramasPresupuestarios" name="programaPreId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un Programa Presupuestario.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="txtAcciones" class="form-label">Acciones</label>
+                            <select class="form-select" id="txtAcciones" name="accionId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione una Acción.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="txtIndicadores" class="form-label">Indicadores</label>
+                            <select class="form-select" id="txtIndicadores" name="indicadorId">
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un Indicador.</div>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="txtDescripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="txtDescripcion" name="descripcion" rows="3" required></textarea>
+                            <div class="invalid-feedback">Este campo es obligatorio.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="txtFacultades" class="form-label">Facultad</label>
+                            <select class="form-select" id="txtFacultades" name="facultadId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione una Facultad.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="txtCarreras" class="form-label">Carrera</label>
+                            <select class="form-select" id="txtCarreras" name="carreraId">
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione una Carrera.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="txtItemPresupuestario" class="form-label">Item Presupuestario</label>
+                            <input type="text" class="form-control" id="txtItemPresupuestario" name="itemPresupuestario" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="txtImpacto" class="form-label">Impacto</label>
+                            <select class="form-select" id="txtImpacto" name="impacto" required>
+
+                                <option value="Alto">Alto</option>
+                                <option value="Medio">Medio</option>
+                                <option value="Bajo">Bajo</option>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un nivel de Impacto.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="txtRiesgo" class="form-label">Riesgo</label>
+                            <input type="text" class="form-control" id="txtRiesgo" name="riesgo" />
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label for="txtFuente1Monto" class="form-label">Fuente 1 Monto</label>
+                                <input type="number" step="0.01" class="form-control" id="txtFuente1Monto" name="fuente1Monto" required />
+                                <div class="invalid-feedback">Este campo es obligatorio.</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="txtFuente2Monto" class="form-label">Fuente 2 Monto</label>
+                                <input type="number" step="0.01" class="form-control" id="txtFuente2Monto" name="fuente2Monto" required />
+                                <div class="invalid-feedback">Este campo es obligatorio.</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="txtFuente3Monto" class="form-label">Fuente 3 Monto</label>
+                                <input type="number" step="0.01" class="form-control" id="txtFuente3Monto" name="fuente3Monto" required />
+                                <div class="invalid-feedback">Este campo es obligatorio.</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="txtRecursosActividad" class="form-label">Recursos Actividad</label>
+                                <input type="number" step="0.01" class="form-control" id="txtRecursosActividad" name="recursosActividad" required readonly />
+                                <div class="invalid-feedback">Este campo es obligatorio.</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnGuardarAgregar" disabled>Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Actividad -->
+<div class="modal fade" id="editarModal" tabindex="-1" aria-labelledby="editarModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <form id="formEditar" asp-action="Editar" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editarModalLabel">Editar Actividad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+
+                    <div id="spinnerEditar"
+                         class="d-flex justify-content-center align-items-center position-absolute top-0 start-0 w-100 h-100 d-none"
+                         style="background-color: rgba(255,255,255,0.7); z-index: 10;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <input type="hidden" id="hiddenId" name="Id" />
+                        <input type="hidden" id="txtPlanificacionIdEdit" name="planificacionId" />
+                        <input type="hidden" id="txtRecursosRestantesEdit" name="recursosRestantes" />
+
+                        <div class="col-md-6">
+                            <label for="txtUnidadesResponsablesEdit" class="form-label">Unidades Responsables</label>
+                            <select class="form-select" id="txtUnidadesResponsablesEdit" name="unidadRespId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione una Unidad Responsable.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="txtObjetivosEstrategicosInstitucionalesEdit" class="form-label">Objetivos Estratégicos Institucionales</label>
+                            <select class="form-select" id="txtObjetivosEstrategicosInstitucionalesEdit" name="objEstrId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un Objetivo Estratégico Institucional.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="txtUnidadesEjecutorasEdit" class="form-label">Unidades Ejecutoras</label>
+                            <select class="form-select" id="txtUnidadesEjecutorasEdit" name="unidadEjecutoraId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione una Unidad Ejecutora.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="txtObjetivosOperativosEdit" class="form-label">Objetivos Operativos</label>
+                            <select class="form-select" id="txtObjetivosOperativosEdit" name="objetivoOperativoId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un Objetivo Operativo.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="txtEjesPlanNacionalDesarrolloEdit" class="form-label">Ejes Plan Nacional Desarrollo</label>
+                            <select class="form-select" id="txtEjesPlanNacionalDesarrolloEdit" name="ejePnId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un Eje Plan Nacional Desarrollo.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="txtObjetivosPlanNacionalDesarrolloEdit" class="form-label">Objetivos Plan Nacional Desarrollo</label>
+                            <select class="form-select" id="txtObjetivosPlanNacionalDesarrolloEdit" name="objPnId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un Objetivo Plan Nacional Desarrollo.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="txtPoliticasPlanNacionalDesarrolloEdit" class="form-label">Políticas Plan Nacional Desarrollo</label>
+                            <select class="form-select" id="txtPoliticasPlanNacionalDesarrolloEdit" name="politicaPnId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione una Política Plan Nacional Desarrollo.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="txtMetasPlanNacionalDesarrolloEdit" class="form-label">Metas Plan Nacional Desarrollo</label>
+                            <select class="form-select" id="txtMetasPlanNacionalDesarrolloEdit" name="metaPnId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione una Meta Plan Nacional Desarrollo.</div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="txtProgramasNacionalesEdit" class="form-label">Programas Nacionales</label>
+                            <select class="form-select" id="txtProgramasNacionalesEdit" name="programaNacId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un Programa Nacional.</div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="txtProgramasInstitucionalesEdit" class="form-label">Programas Institucionales</label>
+                            <select class="form-select" id="txtProgramasInstitucionalesEdit" name="programaInstId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un Programa Institucional.</div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="txtProductosInstitucionalesEdit" class="form-label">Productos Institucionales</label>
+                            <select class="form-select" id="txtProductosInstitucionalesEdit" name="productoInstId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un Producto Institucional.</div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="txtProgramasPresupuestariosEdit" class="form-label">Programas Presupuestarios</label>
+                            <select class="form-select" id="txtProgramasPresupuestariosEdit" name="programaPreId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un Programa Presupuestario.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="txtAccionesEdit" class="form-label">Acciones</label>
+                            <select class="form-select" id="txtAccionesEdit" name="accionId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione una Acción.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="txtIndicadoresEdit" class="form-label">Indicadores</label>
+                            <select class="form-select" id="txtIndicadoresEdit" name="indicadorId">
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un Indicador.</div>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="txtDescripcionEdit" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="txtDescripcionEdit" name="descripcion" rows="3" required></textarea>
+                            <div class="invalid-feedback">Este campo es obligatorio.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="txtFacultadesEdit" class="form-label">Facultad</label>
+                            <select class="form-select" id="txtFacultadesEdit" name="facultadId" required>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione una Facultad.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="txtCarrerasEdit" class="form-label">Carrera</label>
+                            <select class="form-select" id="txtCarrerasEdit" name="carreraId">
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione una Carrera.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="txtItemPresupuestarioEdit" class="form-label">Item Presupuestario</label>
+                            <input type="text" class="form-control" id="txtItemPresupuestarioEdit" name="itemPresupuestario" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="txtImpactoEdit" class="form-label">Impacto</label>
+                            <select class="form-select" id="txtImpactoEdit" name="impacto" required>
+
+                                <option value="Alto">Alto</option>
+                                <option value="Medio">Medio</option>
+                                <option value="Bajo">Bajo</option>
+                            </select>
+                            <div class="invalid-feedback">Por favor, seleccione un nivel de Impacto.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="txtRiesgoEdit" class="form-label">Riesgo</label>
+                            <input type="text" class="form-control" id="txtRiesgoEdit" name="riesgo" />
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label for="txtFuente1MontoEdit" class="form-label">Fuente 1 Monto</label>
+                                <input type="number" step="0.01" class="form-control" id="txtFuente1MontoEdit" name="fuente1Monto" required />
+                                <div class="invalid-feedback">Este campo es obligatorio.</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="txtFuente2MontoEdit" class="form-label">Fuente 2 Monto</label>
+                                <input type="number" step="0.01" class="form-control" id="txtFuente2MontoEdit" name="fuente2Monto" required />
+                                <div class="invalid-feedback">Este campo es obligatorio.</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="txtFuente3MontoEdit" class="form-label">Fuente 3 Monto</label>
+                                <input type="number" step="0.01" class="form-control" id="txtFuente3MontoEdit" name="fuente3Monto" required />
+                                <div class="invalid-feedback">Este campo es obligatorio.</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="txtRecursosActividadEdit" class="form-label">Recursos Actividad</label>
+                                <input type="number" step="0.01" class="form-control" id="txtRecursosActividadEdit" name="recursosActividad" required readonly />
+                                <div class="invalid-feedback">Este campo es obligatorio.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnGuardarEditar" disabled>Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+              // Global base URL from configuration
+        var baseUrl = '@Configuration["ApiSettings:BaseUrl"]';
+
+        // Generic function to load data for a Choices select with pagination and search
+        async function loadChoicesData(choicesInstance, endpoint, page, searchQuery) {
+            const pageSize = 5;
+            const url = new URL(baseUrl + endpoint);
+            url.searchParams.append('page', page);
+            url.searchParams.append('pageSize', pageSize);
+            if (searchQuery) {
+                url.searchParams.append('filter', searchQuery);
+                url.searchParams.append('filterField', 'Nombre');
+            }
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("Error loading data from " + endpoint);
+                const data = await response.json();
+                const items = data.datos.data;
+                const totalPages = data.datos.pagination.totalPages;
+                choicesInstance.currentPage = page;
+                choicesInstance.totalPages = totalPages;
+                if (page === 1 || searchQuery !== choicesInstance.lastSearch) {
+                    choicesInstance.lastSearch = searchQuery;
+                }
+                choicesInstance.clearChoices();
+                choicesInstance.setChoices(
+                    items.map(item => ({
+                        value: item[Object.keys(item)[0]].toString(),
+                        label: item.nombre || item.nombreIndicador || ""
+                    })),
+                    'value', 'label', true
+                );
+                // Create or update pagination container in the dropdown
+                const dropdown = choicesInstance.dropdown.element;
+                let pagination = dropdown.querySelector('.choices__pagination');
+                if (!pagination) {
+                    pagination = document.createElement('div');
+                    pagination.className = 'choices__pagination';
+                    dropdown.appendChild(pagination);
+                }
+                pagination.innerHTML = `
+                    <button class="choices__pagination-prev" type="button">←</button>
+                    <button class="choices__pagination-next" type="button">→</button>
+                `;
+                // Add event listeners for pagination buttons
+                pagination.querySelector('.choices__pagination-prev').addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (choicesInstance.currentPage > 1) {
+                        await loadChoicesData(choicesInstance, endpoint, choicesInstance.currentPage - 1, choicesInstance.lastSearch || '');
+                    }
+                });
+                pagination.querySelector('.choices__pagination-next').addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (choicesInstance.currentPage < choicesInstance.totalPages) {
+                        await loadChoicesData(choicesInstance, endpoint, choicesInstance.currentPage + 1, choicesInstance.lastSearch || '');
+                    }
+                });
+                // Disable buttons if at limits
+                const prevButton = pagination.querySelector('.choices__pagination-prev');
+                const nextButton = pagination.querySelector('.choices__pagination-next');
+                if (prevButton) prevButton.disabled = page === 1;
+                if (nextButton) nextButton.disabled = page >= totalPages;
+            } catch (error) {
+                console.error("Error loading choices data:", error);
+            }
+        }
+
+        // Generic function to initialize a Choices select with search event
+        function initializeChoicesSelect(selectId, endpoint) {
+            const choicesInstance = new Choices(`#${selectId}`, {
+                searchPlaceholderValue: 'Search...',
+                shouldSort: false,
+                loadingText: 'Loading...',
+                noResultsText: 'No results found',
+                itemSelectText: 'Select',
+                searchResultLimit: -1,
+                position: 'auto'
+            });
+            choicesInstance.passedElement.element.addEventListener('search', async (e) => {
+                const search = e.detail.value;
+                await loadChoicesData(choicesInstance, endpoint, 1, search);
+            });
+            return choicesInstance;
+        }
+
+        // Mapping from select element IDs to their API endpoints
+        const endpoints = {
+            "txtUnidadesResponsables": "/api/UnidadesResponsables",
+            "txtObjetivosEstrategicosInstitucionales": "/api/ObjetivosEstrategicosInstitucionales",
+            "txtUnidadesEjecutoras": "/api/UnidadesEjecutoras",
+            "txtObjetivosOperativos": "/api/ObjetivosOperativos",
+            "txtEjesPlanNacionalDesarrollo": "/api/EjesPlanNacionalDesarrollo",
+            "txtObjetivosPlanNacionalDesarrollo": "/api/ObjetivosPlanNacionalDesarrollo",
+            "txtPoliticasPlanNacionalDesarrollo": "/api/PoliticasPlanNacionalDesarrollo",
+            "txtMetasPlanNacionalDesarrollo": "/api/MetasPlanNacionalDesarrollo",
+            "txtProgramasNacionales": "/api/ProgramasNacionales",
+            "txtProgramasInstitucionales": "/api/ProgramasInstitucionales",
+            "txtProductosInstitucionales": "/api/ProductosInstitucionales",
+            "txtProgramasPresupuestarios": "/api/ProgramasPresupuestarios",
+            "txtAcciones": "/api/Acciones",
+            "txtIndicadores": "/api/Indicadores",
+            "txtCarreras": "/api/Carreras",
+            "txtFacultades": "/api/Facultades",
+            // Edit modal endpoints
+            "txtUnidadesResponsablesEdit": "/api/UnidadesResponsables",
+            "txtObjetivosEstrategicosInstitucionalesEdit": "/api/ObjetivosEstrategicosInstitucionales",
+            "txtUnidadesEjecutorasEdit": "/api/UnidadesEjecutoras",
+            "txtObjetivosOperativosEdit": "/api/ObjetivosOperativos",
+            "txtEjesPlanNacionalDesarrolloEdit": "/api/EjesPlanNacionalDesarrollo",
+            "txtObjetivosPlanNacionalDesarrolloEdit": "/api/ObjetivosPlanNacionalDesarrollo",
+            "txtPoliticasPlanNacionalDesarrolloEdit": "/api/PoliticasPlanNacionalDesarrollo",
+            "txtMetasPlanNacionalDesarrolloEdit": "/api/MetasPlanNacionalDesarrollo",
+            "txtProgramasNacionalesEdit": "/api/ProgramasNacionales",
+            "txtProgramasInstitucionalesEdit": "/api/ProgramasInstitucionales",
+            "txtProductosInstitucionalesEdit": "/api/ProductosInstitucionales",
+            "txtProgramasPresupuestariosEdit": "/api/ProgramasPresupuestarios",
+            "txtAccionesEdit": "/api/Acciones",
+            "txtIndicadoresEdit": "/api/Indicadores",
+            "txtCarrerasEdit": "/api/Carreras",
+            "txtFacultadesEdit": "/api/Facultades"
+        };
+
+        // Mapping for edit modal: select element ID to data attribute from the trigger button
+        const editFieldMapping = {
+            "txtUnidadesResponsablesEdit": "data-unidadrespid",
+            "txtObjetivosEstrategicosInstitucionalesEdit": "data-objestrid",
+            "txtUnidadesEjecutorasEdit": "data-unidadejecutoraid",
+            "txtObjetivosOperativosEdit": "data-objetivooperativoid",
+            "txtEjesPlanNacionalDesarrolloEdit": "data-ejepnid",
+            "txtObjetivosPlanNacionalDesarrolloEdit": "data-objpnid",
+            "txtPoliticasPlanNacionalDesarrolloEdit": "data-politicapnid",
+            "txtMetasPlanNacionalDesarrolloEdit": "data-metapnid",
+            "txtProgramasNacionalesEdit": "data-programanacid",
+            "txtProgramasInstitucionalesEdit": "data-programainstid",
+            "txtProductosInstitucionalesEdit": "data-productoinstid",
+            "txtProgramasPresupuestariosEdit": "data-programapreid",
+            "txtAccionesEdit": "data-accionid",
+            "txtIndicadoresEdit": "data-indicadorid",
+            "txtCarrerasEdit": "data-carreraid",
+            "txtFacultadesEdit": "data-facultadid"
+        };
+
+        // Global objects to store Choices instances for Agregar and Editar modals
+        let choicesAgregar = {};
+        let choicesEditar = {};
+
+        // ---------------------- Agregar Modal ---------------------- //
+        const agregarModal = document.getElementById('agregarModal');
+        if (agregarModal) {
+                    agregarModal.addEventListener('show.bs.modal', async function (event) {
+            // Clear underlying select elements before reinitializing Choices
+            Object.keys(endpoints).forEach(function (key) {
+                if (!key.endsWith('Edit')) {
+                    const selectEl = document.getElementById(key);
+                    if (selectEl) {
+                        // Remove any existing options and reset the value
+                        selectEl.innerHTML = "";
+                        selectEl.value = "";
+                    }
+                }
+            });
+
+            // Proceed with showing the spinner and initializing Choices for each select
+            const button = event.relatedTarget;
+            let spinner = document.getElementById('spinnerAgregar');
+            let formContainer = document.getElementById('formAgregarContainer'); // Asegúrate de que exista este contenedor en el HTML
+            if (spinner) {
+                spinner.classList.remove('d-none');
+                spinner.style.display = 'flex';
+            }
+            if (formContainer) {
+                formContainer.style.display = 'none';
+            }
+            document.getElementById('txtPlanificacionId').value = button.getAttribute('data-planificacionid');
+            let mappingPromises = [];
+            Object.keys(endpoints).forEach(function (key) {
+                if (!key.endsWith('Edit')) {
+                    choicesAgregar[key] = initializeChoicesSelect(key, endpoints[key]);
+                    let promise = loadChoicesData(choicesAgregar[key], endpoints[key], 1, '');
+                    mappingPromises.push(promise);
+                }
+            });
+            await Promise.all(mappingPromises);
+
+            // Hide spinner and show form container
+            if (spinner) {
+                spinner.classList.add('d-none');
+                spinner.style.display = 'none';
+            }
+            if (formContainer) {
+                formContainer.style.display = 'block';
+            }
+        });
+
+            // Destroy Choices instances and reset form inputs when the Agregar modal is hidden
+            agregarModal.addEventListener('hidden.bs.modal', function () {
+                Object.keys(choicesAgregar).forEach(function (key) {
+                    if (choicesAgregar[key]) {
+                        choicesAgregar[key].destroy();
+                        delete choicesAgregar[key];
+                    }
+                });
+                this.querySelectorAll('input, select, textarea').forEach(function (input) {
+                    if (input.type !== 'hidden') {
+                        input.value = '';
+                        input.classList.remove('is-invalid');
+                    }
+                });
+                const btnGuardarAgregar = document.getElementById('btnGuardarAgregar');
+                if (btnGuardarAgregar) btnGuardarAgregar.disabled = true;
+            });
+        }
+
+        // ---------------------- Editar Modal ---------------------- //
+        const editarModal = document.getElementById('editarModal');
+        if (editarModal) {
+            editarModal.addEventListener('show.bs.modal', function (event) {
+                // Initialize all edit modal Choices selects
+                Object.keys(endpoints).forEach(function (key) {
+                    if (key.endsWith('Edit')) {
+                        choicesEditar[key] = initializeChoicesSelect(key, endpoints[key]);
+                        loadChoicesData(choicesEditar[key], endpoints[key], 1, '');
+                    }
+                });
+                let spinner = document.getElementById('spinnerEditar');
+                let formEditarEl = document.getElementById('formEditar');
+                if (spinner) {
+                    spinner.classList.remove('d-none');
+                    spinner.style.display = 'flex';
+                }
+                if (formEditarEl) {
+                    formEditarEl.style.display = 'none';
+                }
+                const button = event.relatedTarget;
+                // Map each Choices select with the corresponding value from the trigger button
+                let mappingPromises = [];
+                Object.keys(editFieldMapping).forEach(function (key) {
+                    const dataAttr = editFieldMapping[key];
+                    const value = button.getAttribute(dataAttr);
+                    if (choicesEditar[key]) {
+                        let promise = loadChoicesData(choicesEditar[key], endpoints[key], 1, '').then(function () {
+                            choicesEditar[key].setChoiceByValue(value);
+                        });
+                        mappingPromises.push(promise);
+                    }
+                });
+                // Set other input values immediately
+                document.getElementById('hiddenId').value = button.getAttribute('data-id');
+                document.getElementById('txtPlanificacionIdEdit').value = button.getAttribute('data-planificacionid');
+                document.getElementById('txtDescripcionEdit').value = button.getAttribute('data-descripcion');
+                document.getElementById('txtImpactoEdit').value = button.getAttribute('data-impacto');
+                document.getElementById('txtRiesgoEdit').value = button.getAttribute('data-riesgo');
+                document.getElementById('txtItemPresupuestarioEdit').value = button.getAttribute('data-itempresupuestario');
+                document.getElementById('txtFuente1MontoEdit').value = Number(button.getAttribute('data-fuente1monto'));
+                document.getElementById('txtFuente2MontoEdit').value = Number(button.getAttribute('data-fuente2monto'));
+                document.getElementById('txtFuente3MontoEdit').value = Number(button.getAttribute('data-fuente3monto'));
+                document.getElementById('txtRecursosActividadEdit').value = Number(button.getAttribute('data-recursosactividad'));
+                document.getElementById('txtRecursosRestantesEdit').value = button.getAttribute('data-recursosrestantes');
+                // Wait for all mapping promises to resolve, then hide spinner and show form
+                Promise.all(mappingPromises).then(function () {
+                    if (spinner) {
+                        spinner.classList.add('d-none');
+                        spinner.style.display = 'none';
+                    }
+                    if (formEditarEl) {
+                        formEditarEl.style.display = 'block';
+                        // Validate the form to mark it as valid (since it's an existing record)
+                        const btnGuardarEditar = document.getElementById('btnGuardarEditar');
+                        if (formEditarEl && btnGuardarEditar) {
+                            validateForm(formEditarEl, btnGuardarEditar);
+                        }
+                    }
+                });
+            });
+            // Destroy Choices instances and reset form inputs when the Editar modal is hidden
+            editarModal.addEventListener('hidden.bs.modal', function () {
+                Object.keys(choicesEditar).forEach(function (key) {
+                    if (choicesEditar[key]) {
+                        choicesEditar[key].destroy();
+                        delete choicesEditar[key];
+                    }
+                });
+                this.querySelectorAll('input, select, textarea').forEach(function (input) {
+                    if (input.type !== 'hidden') {
+                        input.value = '';
+                        input.classList.remove('is-invalid');
+                    }
+                });
+                const btnGuardarEditar = document.getElementById('btnGuardarEditar');
+                if (btnGuardarEditar) btnGuardarEditar.disabled = true;
+            });
+        }
+
+        // ---------------------- Form Validation ---------------------- //
+        function validateForm(form, submitBtn) {
+            let valid = true;
+            form.querySelectorAll('input[required], select[required], textarea[required]').forEach(function (input) {
+                if (!input.value.trim()) {
+                    input.classList.add('is-invalid');
+                    valid = false;
+                } else {
+                    input.classList.remove('is-invalid');
+                }
+            });
+            if (submitBtn) submitBtn.disabled = !valid;
+        }
+
+        const formAgregar = document.getElementById('formAgregar');
+        const btnGuardarAgregar = document.getElementById('btnGuardarAgregar');
+        if (formAgregar && btnGuardarAgregar) {
+            formAgregar.addEventListener('input', function () {
+                validateForm(formAgregar, btnGuardarAgregar);
+            });
+            formAgregar.addEventListener('submit', function (e) {
+                if (!formAgregar.checkValidity()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    formAgregar.classList.add('was-validated');
+                }
+            });
+        }
+
+        const formEditar = document.getElementById('formEditar');
+        const btnGuardarEditar = document.getElementById('btnGuardarEditar');
+        if (formEditar && btnGuardarEditar) {
+            formEditar.addEventListener('input', function () {
+                validateForm(formEditar, btnGuardarEditar);
+            });
+            formEditar.addEventListener('submit', function (e) {
+                if (!formEditar.checkValidity()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    formEditar.classList.add('was-validated');
+                }
+            });
+        }
+
+        // ---------------------- Column Toggle Handling ---------------------- //
+        const checkboxes = document.querySelectorAll('.column-toggle');
+        const columnsKey = 'actividadesTableColumns';
+        let storedVisibility = localStorage.getItem(columnsKey);
+        if (!storedVisibility) {
+            let initialState = {};
+            checkboxes.forEach(function (cb) {
+                initialState[cb.value] = true;
+            });
+            localStorage.setItem(columnsKey, JSON.stringify(initialState));
+            storedVisibility = JSON.stringify(initialState);
+        }
+        const parsedVisibility = JSON.parse(storedVisibility);
+        checkboxes.forEach(function (cb) {
+            if (parsedVisibility[cb.value] !== undefined) {
+                cb.checked = parsedVisibility[cb.value];
+                toggleColumn(cb.value, cb.checked);
+            }
+            cb.addEventListener('change', function () {
+                parsedVisibility[cb.value] = cb.checked;
+                localStorage.setItem(columnsKey, JSON.stringify(parsedVisibility));
+                toggleColumn(cb.value, cb.checked);
+            });
+        });
+        function toggleColumn(colClass, show) {
+            const elements = document.querySelectorAll('.' + colClass);
+            elements.forEach(function (el) {
+                el.style.display = show ? '' : 'none';
+            });
+        }
+
+        // ---------------------- Table Search and Pagination ---------------------- //
+        const searchInput = document.getElementById('searchInput'),
+              filterFieldSelect = document.getElementById('filterFieldSelect'),
+              searchForm = document.getElementById('searchForm'),
+              currentPageInput = document.getElementById('currentPage');
+        let debounceTimer;
+        function handleSearch() {
+            const query = searchInput.value.trim();
+            if (query.length > 4 || query.length === 0) {
+                currentPageInput.value = 1;
+                searchForm.submit();
+            }
+        }
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(handleSearch, 500);
+            });
+        }
+        if (filterFieldSelect) {
+            filterFieldSelect.addEventListener('change', function () {
+                currentPageInput.value = 1;
+                searchForm.submit();
+            });
+        }
+        if (searchForm) {
+            searchForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                handleSearch();
+            });
+        }
+
+        // ---------------------- Update "Recursos Actividad" Fields ---------------------- //
+        function updateRecursosActividadAdd() {
+            const f1 = parseFloat(document.getElementById('txtFuente1Monto').value) || 0;
+            const f2 = parseFloat(document.getElementById('txtFuente2Monto').value) || 0;
+            const f3 = parseFloat(document.getElementById('txtFuente3Monto').value) || 0;
+            document.getElementById('txtRecursosActividad').value = (f1 + f2 + f3).toFixed(2);
+        }
+        function updateRecursosActividadEdit() {
+            const f1 = parseFloat(document.getElementById('txtFuente1MontoEdit').value) || 0;
+            const f2 = parseFloat(document.getElementById('txtFuente2MontoEdit').value) || 0;
+            const f3 = parseFloat(document.getElementById('txtFuente3MontoEdit').value) || 0;
+            document.getElementById('txtRecursosActividadEdit').value = (f1 + f2 + f3).toFixed(2);
+        }
+        const txtFuente1Monto = document.getElementById('txtFuente1Monto'),
+              txtFuente2Monto = document.getElementById('txtFuente2Monto'),
+              txtFuente3Monto = document.getElementById('txtFuente3Monto');
+        if (txtFuente1Monto) {
+            txtFuente1Monto.addEventListener('input', updateRecursosActividadAdd);
+        }
+        if (txtFuente2Monto) {
+            txtFuente2Monto.addEventListener('input', updateRecursosActividadAdd);
+        }
+        if (txtFuente3Monto) {
+            txtFuente3Monto.addEventListener('input', updateRecursosActividadAdd);
+        }
+        const txtFuente1MontoEdit = document.getElementById('txtFuente1MontoEdit'),
+              txtFuente2MontoEdit = document.getElementById('txtFuente2MontoEdit'),
+              txtFuente3MontoEdit = document.getElementById('txtFuente3MontoEdit');
+        if (txtFuente1MontoEdit) {
+            txtFuente1MontoEdit.addEventListener('input', updateRecursosActividadEdit);
+        }
+        if (txtFuente2MontoEdit) {
+            txtFuente2MontoEdit.addEventListener('input', updateRecursosActividadEdit);
+        }
+        if (txtFuente3MontoEdit) {
+            txtFuente3MontoEdit.addEventListener('input', updateRecursosActividadEdit);
+        }
+
+    </script>
+}

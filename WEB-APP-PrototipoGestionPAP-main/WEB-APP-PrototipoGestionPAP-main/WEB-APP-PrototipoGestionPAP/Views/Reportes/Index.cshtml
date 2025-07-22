@@ -1,0 +1,205 @@
+﻿@{
+    ViewBag.Title = "Generar Reportes";
+}
+
+<!-- Estilos: Se reutilizan estilos para botones, modales y paginación existentes -->
+<style>
+    .btn-primary {
+        background-color: #004383;
+        border-color: #004383;
+    }
+
+    .report-container {
+        background-color: #fff;
+        padding: 20px;
+        box-shadow: 0 4px 5px rgba(0,0,0,0.3);
+        margin-bottom: 20px;
+    }
+    /* Estilos para el visor de PDF */
+    .pdf-viewer {
+        width: 100%;
+        height: 600px;
+        border: 1px solid #ddd;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        margin-top: 20px;
+    }
+
+    /* Estilos para el spinner */
+    .spinner-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(255, 255, 255, 0.75);
+        z-index: 10; /* Para que quede sobre el iframe */
+    }
+</style>
+
+<div class="card position-relative m-2" style="background-color: #fff; color: #000;">
+    <div class="card-header text-center" style="background-color: #f8f9fa;">
+        <h3 class="m-0" style="font-weight: bold;">Generar Reporte</h3>
+    </div>
+    <div class="card-body">
+        <!-- Selector de tipo de reporte -->
+        <div class="mb-3">
+            <label for="tipoReporte" class="form-label">Selecciona el tipo de reporte:</label>
+            <select class="form-select" id="tipoReporte" name="tipoReporte">
+                <option value="">-- Seleccionar --</option>
+                <option value="todasPlanificaciones">Todas las Planificaciones</option>
+                <option value="detallePlanificacion">Detalle de Planificación</option>
+                <option value="actividadesPlanificacion">Actividades por Planificación</option>
+                <option value="planVsReal">Ejecución Presupuestaria (Plan vs. Real)</option>
+                <option value="obrasCronograma">Obras/Tareas y Cronograma</option>
+                <option value="avanceMensual">Avance Mensual Consolidado</option>
+            </select>
+        </div>
+
+        <!-- Panel de parámetros: se muestran u ocultan según el reporte seleccionado -->
+        <div id="panelParametros" class="mb-3" style="display: none;">
+            <!-- Ejemplo de parámetro: Planificación (id) -->
+            <div class="mb-3 reporte-param" data-tipo="detallePlanificacion,actividadesPlanificacion,planVsReal,obrasCronograma,avanceMensual">
+                <label for="paramPlanificacionId" class="form-label">ID de Planificación:</label>
+                <input type="number" class="form-control" id="paramPlanificacionId" name="planificacionId" placeholder="Ingrese el ID de la planificación" />
+            </div>
+
+            <!-- Ejemplo de parámetro para filtrar por año (sólo para 'Todas las Planificaciones') -->
+            <div class="mb-3 reporte-param" data-tipo="todasPlanificaciones">
+                <label for="paramAnio" class="form-label">Año:</label>
+                <input type="number" class="form-control" id="paramAnio" name="anio" placeholder="Ingrese el año (opcional)" />
+            </div>
+        </div>
+
+        <!-- Botón para generar reporte -->
+        <button type="button" id="btnGenerarReporte" class="btn btn-primary">Generar Reporte</button>
+    </div>
+</div>
+
+<!-- Visor de PDF para el reporte generado -->
+<div id="visorPdfContainer" class="card position-relative m-2" style="background-color: #fff; color: #000; display: none;">
+    <div class="card-body" style="position: relative;">
+        <!-- Spinner overlay (inicialmente oculto) -->
+        <div id="spinnerOverlay" class="spinner-overlay" style="display: none;">
+            <!-- Spinner de Bootstrap 5 -->
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+
+        <!-- Se usa un iframe para mostrar el PDF generado -->
+        <iframe id="visorPdf" class="pdf-viewer" src=""></iframe>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const tipoReporteSelect = document.getElementById("tipoReporte");
+        const panelParametros = document.getElementById("panelParametros");
+        const btnGenerarReporte = document.getElementById("btnGenerarReporte");
+        const visorPdfContainer = document.getElementById("visorPdfContainer");
+        const visorPdf = document.getElementById("visorPdf");
+        const spinnerOverlay = document.getElementById("spinnerOverlay");
+        const parametroPlanificacionId = document.getElementById("paramPlanificacionId");
+        const parametroAnio = document.getElementById("paramAnio");
+
+        // URL base de tu API en Azure
+        const apiBaseUrl = "https://api-prototipogestionpap20250108212655.azurewebsites.net";
+
+        // Al cambiar el tipo de reporte, se muestran los parámetros correspondientes
+        tipoReporteSelect.addEventListener("change", function () {
+            const seleccionado = this.value;
+            panelParametros.style.display = (seleccionado !== "") ? "block" : "none";
+
+            // Mostrar u ocultar parámetros basados en el atributo data-tipo
+            let elementosParametros = document.querySelectorAll(".reporte-param");
+            elementosParametros.forEach(function(elem) {
+                const tipos = elem.getAttribute("data-tipo").split(",");
+                if (tipos.indexOf(seleccionado) !== -1) {
+                    elem.style.display = "block";
+                } else {
+                    elem.style.display = "none";
+                }
+            });
+        });
+
+        // Cuando se termina de cargar el PDF en el iframe, ocultamos el spinner
+        visorPdf.addEventListener("load", function () {
+            spinnerOverlay.style.display = "none";
+        });
+
+        // Evento click del botón "Generar Reporte"
+        btnGenerarReporte.addEventListener("click", function () {
+            const tipoReporte = tipoReporteSelect.value;
+            let url = "";
+
+            switch(tipoReporte) {
+                case "todasPlanificaciones": {
+                    const anio = parametroAnio.value.trim();
+                    url = anio
+                        ? `${apiBaseUrl}/api/Reportes/TodasPlanificacionesPdf?anio=${anio}`
+                        : `${apiBaseUrl}/api/Reportes/TodasPlanificacionesPdf`;
+                    break;
+                }
+                case "detallePlanificacion": {
+                    const idDetalle = parametroPlanificacionId.value.trim();
+                    if (!idDetalle) {
+                        alert("Ingrese el ID de la planificación.");
+                        return;
+                    }
+                    url = `${apiBaseUrl}/api/Reportes/DetallePlanificacionPdf?planificacionId=${idDetalle}`;
+                    break;
+                }
+                case "actividadesPlanificacion": {
+                    const idAct = parametroPlanificacionId.value.trim();
+                    if (!idAct) {
+                        alert("Ingrese el ID de la planificación.");
+                        return;
+                    }
+                    url = `${apiBaseUrl}/api/Reportes/ActividadesPorPlanificacionPdf?planificacionId=${idAct}`;
+                    break;
+                }
+                case "planVsReal": {
+                    const idPlanVsReal = parametroPlanificacionId.value.trim();
+                    if (!idPlanVsReal) {
+                        alert("Ingrese el ID de la planificación.");
+                        return;
+                    }
+                    url = `${apiBaseUrl}/api/Reportes/PlanVsRealPdf?planificacionId=${idPlanVsReal}`;
+                    break;
+                }
+                case "obrasCronograma": {
+                    const idObras = parametroPlanificacionId.value.trim();
+                    if (!idObras) {
+                        alert("Ingrese el ID de la planificación.");
+                        return;
+                    }
+                    url = `${apiBaseUrl}/api/Reportes/ObrasTareasCronogramaPdf?planificacionId=${idObras}`;
+                    break;
+                }
+                case "avanceMensual": {
+                    const idAvance = parametroPlanificacionId.value.trim();
+                    if (!idAvance) {
+                        alert("Ingrese el ID de la planificación.");
+                        return;
+                    }
+                    url = `${apiBaseUrl}/api/Reportes/AvanceMensualConsolidadoPdf?planificacionId=${idAvance}`;
+                    break;
+                }
+                default:
+                    alert("Seleccione un tipo de reporte válido.");
+                    return;
+            }
+
+            // 1) Mostrar el contenedor del visor
+            visorPdfContainer.style.display = "block";
+            // 2) Mostrar el spinner (por si el PDF tarda en cargar)
+            spinnerOverlay.style.display = "flex";
+            // 3) Asignar el src del iframe
+            visorPdf.src = url;
+        });
+    });
+</script>

@@ -1,0 +1,55 @@
+﻿
+.btn-primary {
+    background-color: #004383;
+    border-color: #004383;
+}
+
+.fab-add {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.pagination-custom .page-link {
+    background-color: white;
+    border-color: #dee2e6;
+    color: #6c757d;
+}
+
+    .pagination-custom .page-link:hover {
+        background-color: #f8f9fa;
+        border-color: #cfd4da;
+        color: #343a40;
+    }
+
+.pagination-custom .page-item.active .page-link {
+    background-color: #004383 !important;
+    border-color: #004383 !important;
+    color: white !important;
+    font-weight: bold;
+    border-width: 2px;
+}
+
+    .pagination-custom .page-item.active .page-link:hover {
+        background-color: #003366 !important;
+        border-color: #003366 !important;
+        color: white !important;
+    }
+
+.pagination-custom .page-item.disabled .page-link {
+    border-color: #dee2e6;
+    color: transparent;
+    cursor: not-allowed;
+}
+
+.is-invalid {
+    border-color: #dc3545;
+}

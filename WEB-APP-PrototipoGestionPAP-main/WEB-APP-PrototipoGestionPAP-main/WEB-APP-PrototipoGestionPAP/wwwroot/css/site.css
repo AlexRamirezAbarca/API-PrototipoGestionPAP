@@ -1,0 +1,7 @@
+.modal-backdrop {
+    z-index: 9998 !important;
+}
+
+.modal-dialog {
+    z-index: 9999 !important;
+}

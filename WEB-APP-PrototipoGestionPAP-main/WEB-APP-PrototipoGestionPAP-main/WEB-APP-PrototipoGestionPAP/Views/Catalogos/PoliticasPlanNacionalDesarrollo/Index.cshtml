@@ -1,0 +1,187 @@
+@model WEB_APP_PrototipoGestionPAP.Models.ViewModels.CatalogViewModel<WEB_APP_PrototipoGestionPAP.Models.PoliticasPlanNacionalDesarrollo>
+
+@{
+    ViewBag.Title = Model.Title;
+}
+
+<div class="card m-2">
+    <div class="card-header text-center bg-light">
+        <h3 class="m-0 fw-bold">@Model.Title</h3>
+    </div>
+    <div class="card-body">
+        @* Formulario de búsqueda *@
+        <form id="searchForm" method="get" action="@Url.Action("Index", Model.ControllerName)" class="mb-3">
+            <div class="d-flex">
+                <input type="text" class="form-control me-2" id="searchInput" name="filter" placeholder="Buscar..." value="@Model.CurrentFilter" />
+                @Html.DropDownList("filterField", new SelectList(new[] {
+                new { Value = "Nombre", Text = "Filtrar por Nombre" },
+                new { Value = "Descripcion", Text = "Filtrar por Descripción" }
+                }, "Value", "Text", Model.CurrentFilterField), new { @class = "form-select", id = "filterFieldSelect" })
+                <input type="hidden" name="page" value="1" id="currentPage" />
+            </div>
+        </form>
+
+        @* Tabla de datos *@
+        <table class="table table-bordered table-striped" id="tblPoliticasPlanNacionalDesarrollo">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    @if (Model.CanUpdate || Model.CanDelete)
+                    {
+                        <th class="text-center">Acciones</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Items.Any())
+                {
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.PoliticaPnId</td>
+                            <td>@item.Nombre</td>
+                            <td>@item.Descripcion</td>
+
+                            @if (Model.CanUpdate || Model.CanDelete)
+                            {
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        @if (Model.CanUpdate)
+                                        {
+                                            <a href="#" class="btn btn-sm btn-outline-secondary btn-edit" data-bs-toggle="modal" data-bs-target="#editarModal" data-id="@item.PoliticaPnId" data-nombre="@item.Nombre" data-descripcion="@item.Descripcion">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        }
+                                        @if (Model.CanDelete)
+                                        {
+                                            <form action="@Url.Action("Eliminar", Model.ControllerName, new { id = item.PoliticaPnId })" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Está seguro de eliminar este elemento?');">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            }
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="@( (Model.CanUpdate || Model.CanDelete) ? 4 : 3 )" class="text-center">
+                            Sin registros
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @* Paginación *@
+        @Html.Partial("_Pagination", new WEB_APP_PrototipoGestionPAP.Models.ViewModels.PaginationViewModel
+   {
+       CurrentPage = Model.CurrentPage,
+       TotalPages = Model.TotalPages,
+       Filter = Model.CurrentFilter,
+       FilterField = Model.CurrentFilterField
+   })
+
+        @* Botón de agregar *@
+        @if (Model.CanWrite)
+        {
+            <button type="button" class="btn btn-primary fab-add" data-bs-toggle="modal" data-bs-target="#agregarModal">+</button>
+        }
+    </div>
+</div>
+
+@* Vistas Parciales para modales *@
+@Html.Partial("_AddModal", Model)
+@Html.Partial("_EditModal", Model)
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('searchInput');
+            const filterFieldSelect = document.getElementById('filterFieldSelect');
+            const searchForm = document.getElementById('searchForm');
+            const currentPageInput = document.getElementById('currentPage');
+            let debounceTimer;
+
+            function handleSearch() {
+                currentPageInput.value = 1;
+                searchForm.submit();
+            }
+
+            searchInput.addEventListener('input', function () {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(handleSearch, 500);
+            });
+
+            filterFieldSelect.addEventListener('change', function () {
+                currentPageInput.value = 1;
+                searchForm.submit();
+            });
+
+            searchForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                handleSearch();
+            });
+
+            function validateForm(form, submitBtn) {
+                let valid = true;
+                form.querySelectorAll('input[required]').forEach(input => {
+                    if (!input.value.trim()) {
+                        input.classList.add('is-invalid');
+                        valid = false;
+                    } else {
+                        input.classList.remove('is-invalid');
+                    }
+                });
+                submitBtn.disabled = !valid;
+            }
+
+            const formAgregar = document.getElementById('formAgregar');
+            const btnGuardarAgregar = document.getElementById('btnGuardarAgregar');
+            if (formAgregar) {
+                formAgregar.addEventListener('input', () => validateForm(formAgregar, btnGuardarAgregar));
+            }
+
+            const formEditar = document.getElementById('formEditar');
+            const btnGuardarEditar = document.getElementById('btnGuardarEditar');
+            if (formEditar) {
+                formEditar.addEventListener('input', () => validateForm(formEditar, btnGuardarEditar));
+            }
+
+            document.querySelectorAll('.btn-edit').forEach(button => {
+                button.addEventListener('click', function () {
+                    const id = this.getAttribute('data-id');
+                    const nombre = this.getAttribute('data-nombre');
+                    const descripcion = this.getAttribute('data-descripcion');
+                    const hiddenId = document.getElementById('hiddenId');
+                    hiddenId.value = id;
+                    document.getElementById('txtNombreEdit').value = nombre;
+                    document.getElementById('txtDescripcionEdit').value = descripcion;
+                    validateForm(formEditar, btnGuardarEditar);
+                });
+            });
+
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('hidden.bs.modal', function () {
+                    this.querySelectorAll('input').forEach(input => {
+                        input.value = '';
+                        input.classList.remove('is-invalid');
+                    });
+                    if (this.id === 'agregarModal') {
+                        btnGuardarAgregar.disabled = true;
+                    }
+                    if (this.id === 'editarModal') {
+                        btnGuardarEditar.disabled = true;
+                    }
+                });
+            });
+        });
+    </script>
+}

@@ -1,0 +1,64 @@
+﻿@model WEB_APP_PrototipoGestionPAP.Models.ViewModels.CatalogViewModel<WEB_APP_PrototipoGestionPAP.Models.Personas>
+
+@if (Model.CanUpdate)
+{
+    <div class="modal fade" id="editarModal" tabindex="-1" aria-labelledby="editarModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="@Url.Action(Model.EditActionName, Model.ControllerName)" method="post" id="formEditar">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editarModalLabel">Editar @Model.Title</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="id" id="hiddenId" />
+                        <div class="mb-3">
+                            <label for="txtCedulaEdit" class="form-label">Cédula</label>
+                            <input type="text" class="form-control" id="txtCedulaEdit" name="Cedula" placeholder="Ingrese 10 dígitos"
+                                   required
+                                   pattern="^\d{10}$" />
+                            <div class="invalid-feedback">
+                                Por favor ingrese una cedula valida.
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtNombreEdit" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="txtNombreEdit" name="Nombre" required />
+                            <div class="invalid-feedback">Campo requerido.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtApellidoEdit" class="form-label">Apellido</label>
+                            <input type="text" class="form-control" id="txtApellidoEdit" name="Apellido" required />
+                            <div class="invalid-feedback">Campo requerido.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtCorreoElectronicoEdit" class="form-label">Correo Electrónico</label>
+                            <input type="email" class="form-control" id="txtCorreoElectronicoEdit" name="CorreoElectronico" required />
+                            <div class="invalid-feedback">Campo requerido.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtTelefonoEdit" class="form-label">Teléfono</label>
+                            <input type="tel"
+                                   class="form-control"
+                                   id="txtTelefonoEdit"
+                                   name="Telefono"
+                                   placeholder="Ingrese 10 dígitos"
+                                   required
+                                   pattern="^\d{10}$"
+                                   title="El teléfono debe contener 10 dígitos." />
+                            <div class="invalid-feedback">
+                                Por favor ingrese un número de teléfono válido de 10 dígitos.
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" id="btnGuardarEditar" disabled>Guardar cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}

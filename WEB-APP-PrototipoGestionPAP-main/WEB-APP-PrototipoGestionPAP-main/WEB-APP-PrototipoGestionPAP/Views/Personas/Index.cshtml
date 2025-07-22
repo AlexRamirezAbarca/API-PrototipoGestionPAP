@@ -1,0 +1,223 @@
+﻿@model WEB_APP_PrototipoGestionPAP.Models.ViewModels.CatalogViewModel<WEB_APP_PrototipoGestionPAP.Models.Personas>
+
+@{
+    ViewBag.Title = Model.Title;
+}
+
+<div class="card m-2">
+    <div class="card-header text-center bg-light">
+        <h3 class="m-0 fw-bold">@Model.Title</h3>
+    </div>
+    <div class="card-body">
+        <form id="searchForm" method="get" action="@Url.Action("Index", Model.ControllerName)" class="mb-3">
+            <div class="d-flex">
+                <input type="text" class="form-control me-2" id="searchInput" name="filter" placeholder="Buscar..." value="@Model.CurrentFilter" />
+                @Html.DropDownList("filterField", new SelectList(new[] {
+                new { Value = "Cedula", Text = "Filtrar por Cédula" },
+                new { Value = "Nombre", Text = "Filtrar por Nombre" },
+                new { Value = "Apellido", Text = "Filtrar por Apellido" },
+                new { Value = "CorreoElectronico", Text = "Filtrar por Correo" }
+                }, "Value", "Text", Model.CurrentFilterField), new { @class = "form-select", id = "filterFieldSelect" })
+                <input type="hidden" name="page" value="1" id="currentPage" />
+            </div>
+        </form>
+
+        <table class="table table-bordered table-striped" id="tblPersonas">
+            <thead class="table-light">
+                <tr>
+                    <th>Id</th>
+                    <th>Cédula</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Correo Electrónico</th>
+                    <th>Teléfono</th>
+                    @if (Model.CanUpdate || Model.CanDelete)
+                    {
+                        <th class="text-center">Acciones</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Items.Any())
+                {
+                    foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.PersonaId</td>
+                            <td>@item.Cedula</td>
+                            <td>@item.Nombre</td>
+                            <td>@item.Apellido</td>
+                            <td>@item.CorreoElectronico</td>
+                            <td>@item.Telefono</td>
+                            @if (Model.CanUpdate || Model.CanDelete)
+                            {
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        @if (Model.CanUpdate)
+                                        {
+                                            <a href="#"
+                                               class="btn btn-sm btn-outline-secondary btn-edit"
+                                               data-bs-toggle="modal"
+                                               data-bs-target="#editarModal"
+                                               data-id="@item.PersonaId"
+                                               data-cedula="@item.Cedula"
+                                               data-nombre="@item.Nombre"
+                                               data-apellido="@item.Apellido"
+                                               data-correo="@item.CorreoElectronico"
+                                               data-telefono="@item.Telefono" >
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        }
+                                        @if (Model.CanDelete)
+                                        {
+                                            <form action="@Url.Action("Eliminar", Model.ControllerName, new { id = item.PersonaId })" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Está seguro de eliminar este elemento?');">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            }
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="@( (Model.CanUpdate || Model.CanDelete) ? 8 : 7 )" class="text-center">
+                            Sin registros
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @Html.Partial("_Pagination", new WEB_APP_PrototipoGestionPAP.Models.ViewModels.PaginationViewModel
+   {
+       CurrentPage = Model.CurrentPage,
+       TotalPages = Model.TotalPages,
+       Filter = Model.CurrentFilter,
+       FilterField = Model.CurrentFilterField
+   })
+
+        @if (Model.CanWrite)
+        {
+            <button type="button" class="btn btn-primary fab-add" data-bs-toggle="modal" data-bs-target="#agregarModal">+</button>
+        }
+    </div>
+</div>
+
+@Html.Partial("_AddModal", Model)
+@Html.Partial("_EditModal", Model)
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('searchInput');
+            const filterFieldSelect = document.getElementById('filterFieldSelect');
+            const searchForm = document.getElementById('searchForm');
+            const currentPageInput = document.getElementById('currentPage');
+            let debounceTimer;
+
+            function handleSearch() {
+                currentPageInput.value = 1;
+                searchForm.submit();
+            }
+
+            searchInput.addEventListener('input', function () {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(handleSearch, 500);
+            });
+
+            filterFieldSelect.addEventListener('change', function () {
+                currentPageInput.value = 1;
+                searchForm.submit();
+            });
+
+            searchForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                handleSearch();
+            });
+
+            const formEditar = document.getElementById('formEditar');
+            const btnGuardarEditar = document.getElementById('btnGuardarEditar');
+            const formAgregar = document.getElementById('formAgregar');
+            const btnGuardarAgregar = document.getElementById('btnGuardarAgregar');
+
+                    function validateForm(form, submitBtn) {
+            let valid = true;
+
+            // Validar todos los inputs y textareas obligatorios
+            form.querySelectorAll('input[required], textarea[required]').forEach(input => {
+                if (!input.value.trim()) {
+                    input.classList.add('is-invalid');
+                    valid = false;
+                } else {
+                    input.classList.remove('is-invalid');
+                }
+            });
+
+            // Validar el formato del campo teléfono (10 dígitos)
+            const telefonoInput = form.querySelector('input[name="Telefono"]');
+            if (telefonoInput) {
+                const telefonoValue = telefonoInput.value.trim();
+                const regexTelefono = /^\d{10}$/; // Expresión regular: exactamente 10 dígitos
+                if (!regexTelefono.test(telefonoValue)) {
+                    telefonoInput.classList.add('is-invalid');
+                    valid = false;
+                } else {
+                    telefonoInput.classList.remove('is-invalid');
+                }
+            }
+
+            submitBtn.disabled = !valid;
+        }
+
+
+            if (formAgregar) {
+                formAgregar.addEventListener('input', () => validateForm(formAgregar, btnGuardarAgregar));
+            }
+
+            if (formEditar) {
+                formEditar.addEventListener('input', () => validateForm(formEditar, btnGuardarEditar));
+            }
+
+            document.querySelectorAll('.btn-edit').forEach(button => {
+                button.addEventListener('click', function () {
+                    const id = this.getAttribute('data-id');
+                    const cedula = this.getAttribute('data-cedula');
+                    const nombre = this.getAttribute('data-nombre');
+                    const apellido = this.getAttribute('data-apellido');
+                    const correo = this.getAttribute('data-correo');
+                    const telefono = this.getAttribute('data-telefono');
+
+                    document.getElementById('hiddenId').value = id;
+                    document.getElementById('txtCedulaEdit').value = cedula;
+                    document.getElementById('txtNombreEdit').value = nombre;
+                    document.getElementById('txtApellidoEdit').value = apellido;
+                    document.getElementById('txtCorreoElectronicoEdit').value = correo;
+                    document.getElementById('txtTelefonoEdit').value = telefono;
+
+                    validateForm(formEditar, btnGuardarEditar);
+                });
+            });
+
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('hidden.bs.modal', function () {
+                    this.querySelectorAll('input, textarea').forEach(input => {
+                        input.value = '';
+                        input.classList.remove('is-invalid');
+                    });
+                    if (this.id === 'agregarModal') {
+                        btnGuardarAgregar.disabled = true;
+                    }
+                    if (this.id === 'editarModal') {
+                        btnGuardarEditar.disabled = true;
+                    }
+                });
+            });
+        });
+    </script>
+}
